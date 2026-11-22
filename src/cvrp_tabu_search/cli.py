@@ -6,7 +6,7 @@ import typer
 from .experiments.reports import DEFAULT_OUTPUT_DIR
 from .experiments.runner import run_baseline_experiment, run_tabu_search_experiment
 from .instances import Instance, load_default_instance, load_instance
-from .search.shared import SearchParameters
+from .search.shared import DEFAULT_TABU_TENURE, SearchParameters, TabuTenure
 
 app = typer.Typer(help="Run the CVRP tabu search experiments.", no_args_is_help=True)
 
@@ -33,6 +33,12 @@ StagnationLimit = Annotated[
     int,
     typer.Option(min=1, help="Stop after this many iterations without improvement."),
 ]
+TabuTenureMinimum = Annotated[
+    int, typer.Option(min=0, help="Minimum number of iterations a move stays tabu.")
+]
+TabuTenureMaximum = Annotated[
+    int, typer.Option(min=0, help="Maximum number of iterations a move stays tabu.")
+]
 OutputDirectory = Annotated[
     Path,
     typer.Option(
@@ -51,10 +57,13 @@ def baseline_command(
     max_iterations: IterationLimit = 10,
     stagnation_limit: StagnationLimit = 10,
     output_dir: OutputDirectory = DEFAULT_OUTPUT_DIR,
+    tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
+    tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
 ) -> None:
     """Run the baseline with reversals within each route."""
+    tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
     problem = _resolve_instance(instance, target_cost)
-    parameters = SearchParameters(max_iterations, stagnation_limit)
+    parameters = SearchParameters(max_iterations, stagnation_limit, tabu_tenure=tenure)
     if not run_baseline_experiment(problem, parameters, output_dir=output_dir):
         raise typer.Exit(code=1)
 
@@ -66,12 +75,23 @@ def tabu_search_command(
     max_iterations: IterationLimit = 60,
     stagnation_limit: StagnationLimit = 30,
     output_dir: OutputDirectory = DEFAULT_OUTPUT_DIR,
+    tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
+    tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
 ) -> None:
     """Run the search with inter-route moves, intensification and diversification."""
+    tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
     problem = _resolve_instance(instance, target_cost)
-    parameters = SearchParameters(max_iterations, stagnation_limit)
+    parameters = SearchParameters(max_iterations, stagnation_limit, tabu_tenure=tenure)
     if not run_tabu_search_experiment(problem, parameters, output_dir=output_dir):
         raise typer.Exit(code=1)
+
+
+def _resolve_tabu_tenure(minimum: int, maximum: int) -> TabuTenure:
+    if minimum > maximum:
+        raise typer.BadParameter(
+            "Must be at least --tabu-tenure-min.", param_hint="--tabu-tenure-max"
+        )
+    return TabuTenure(minimum, maximum)
 
 
 def _resolve_instance(path: Path | None, target_cost: int | None) -> Instance:

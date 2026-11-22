@@ -26,10 +26,12 @@ Cada execução grava seus CSVs e PNGs em uma subpasta com a data e a hora locai
 
 Use `--output-dir` em qualquer um dos comandos para substituir a pasta base `results/`. O caminho pode ser absoluto ou relativo ao diretório de trabalho. As pastas são criadas automaticamente.
 
+Use `--tabu-tenure-min` e `--tabu-tenure-max` para configurar o intervalo de duração tabu nos dois comandos. A cada movimento, a busca sorteia uma duração em iterações dentro do intervalo inclusivo, que por padrão vai de 3 a 7. Use dois valores iguais para fixar a duração ou dois zeros para desativar o bloqueio tabu.
+
 Use `--max-iterations` e `--stagnation-limit` para ajustar os limites. Para usar outra instância CVRP com distâncias `EUC_2D`, informe o arquivo e seu custo ótimo de referência, que serve de alvo no relatório *time-to-target*.
 
 ```sh
-uv run cvrp tabu-search --instance benchmarks/general/A-n33-k5.vrp --target-cost 661 --max-iterations 100 --stagnation-limit 40 --output-dir resultados/a-n33-k5
+uv run cvrp tabu-search --instance benchmarks/general/A-n33-k5.vrp --target-cost 661 --max-iterations 100 --stagnation-limit 40 --tabu-tenure-min 4 --tabu-tenure-max 8 --output-dir resultados/a-n33-k5
 ```
 
 A CLI também pode ser executada com `uv run python -m cvrp_tabu_search`.
