@@ -41,7 +41,7 @@ Os resultados usam os prefixos `runs_`, `history_`, `convergence_` e `ttt_`. A v
 O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).
 
 - [`search/`](src/cvrp_tabu_search/search/) contém os algoritmos e as operações de busca compartilhadas.
-- [`experiments/`](src/cvrp_tabu_search/experiments/) executa os experimentos e gera os relatórios.
+- [`experiments/`](src/cvrp_tabu_search/experiments/) executa os experimentos. O pacote [`experiments/reports/`](src/cvrp_tabu_search/experiments/reports/) coordena a geração dos relatórios e reúne os módulos de CSV, gráficos e diretórios de saída.
 - `cli.py` recebe os argumentos. `instances.py` carrega os dados e `routes.py` reúne as operações de rota.
 
 Os testes acompanham essa organização em `tests/search/`, `tests/experiments/` e `tests/cli/`. Em `tests/cli/`, os testes dos comandos e dos pontos de entrada ficam em arquivos próprios.
