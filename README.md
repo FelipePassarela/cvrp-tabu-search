@@ -50,6 +50,12 @@ uv run cvrp calibrate
 
 O comando cruza três durações tabu mínimas (`1`, `3`, `6`) com três máximas (`7`, `11`, `15`). São 27 execuções com a mesma semente (`1`) e um orçamento de 180 segundos por execução, cerca de 81 minutos de busca no total. A tabela `results/<data-hora>/calibration.csv` é preenchida conforme as execuções terminam e registra a instância, os parâmetros, o tempo e o melhor custo obtido.
 
+Use `--jobs 4` para executar até quatro buscas em processos separados. O padrão é `--jobs 1`, e a coluna `jobs` registra o limite de processos da calibração. No modo paralelo, as linhas são gravadas conforme as buscas terminam. O orçamento conta tempo de relógio. Com processos disputando CPU, cada busca pode completar menos iterações durante o mesmo orçamento.
+
+```sh
+uv run cvrp calibrate --jobs 4
+```
+
 Para testar outros níveis, passe três valores distintos em cada opção. O maior mínimo deve ser menor ou igual ao menor máximo. `--time-limit` permite um teste curto e `--output-dir` escolhe a pasta dos resultados. Se executar fora da raiz, passe o caminho da pasta com `A-n80-k10.vrp` e `B-n78-k10.vrp` via `--benchmarks-dir`.
 
 ```sh

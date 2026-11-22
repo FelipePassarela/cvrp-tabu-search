@@ -88,6 +88,9 @@ CalibrationMaximums = Annotated[
     TenureLevels,
     typer.Option("--tabu-tenure-max", min=0, help="Three maximum durations."),
 ]
+CalibrationJobs = Annotated[
+    int, typer.Option(min=1, help="Maximum number of calibration runs in parallel.")
+]
 
 
 @app.command("baseline")
@@ -139,6 +142,7 @@ def calibrate_command(
     time_limit: CalibrationTimeLimit = CALIBRATION_TIME_LIMIT_S,
     tenure_minimums: CalibrationMinimums = (1, 3, 6),
     tenure_maximums: CalibrationMaximums = (7, 11, 15),
+    jobs: CalibrationJobs = 1,
 ) -> None:
     """Compare tabu tenure bounds on the three calibration instances."""
     tenures = _resolve_calibration_tenures(tenure_minimums, tenure_maximums)
@@ -149,7 +153,11 @@ def calibrate_command(
 
     try:
         run_calibration(
-            instances, tenures, time_limit_s=time_limit, output_dir=output_dir
+            instances,
+            tenures,
+            time_limit_s=time_limit,
+            output_dir=output_dir,
+            jobs=jobs,
         )
     except (CalibrationError, OSError) as error:
         typer.echo(str(error), err=True)

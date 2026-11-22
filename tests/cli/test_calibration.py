@@ -63,6 +63,7 @@ def test_calibration_writes_one_row_per_instance_and_combination(
     ]
     assert configurations == list(product(INSTANCE_OPTIMA, minimums, maximums))
     assert {row["seed"] for row in rows} == {"1"}
+    assert {row["jobs"] for row in rows} == {"1"}
     assert {row["time_limit_s"] for row in rows} == {"0.0"}
     for row in rows:
         assert row["optimal_cost"] == INSTANCE_OPTIMA[row["instance"]]
@@ -74,10 +75,11 @@ def test_calibration_writes_one_row_per_instance_and_combination(
     [
         (["--tabu-tenure-min", "2", "2", "4"], "three distinct values"),
         (["--tabu-tenure-max", "5", "8", "10"], "at least 6"),
+        (["--jobs", "0"], "--jobs"),
     ],
-    ids=["duplicate-level", "invalid-range"],
+    ids=["duplicate-level", "invalid-range", "zero-jobs"],
 )
-def test_calibration_rejects_invalid_levels_before_creating_reports(
+def test_calibration_rejects_invalid_options_before_creating_reports(
     tmp_path: Path, options: list[str], error_message: str
 ) -> None:
     result = CliRunner().invoke(
