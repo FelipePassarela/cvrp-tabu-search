@@ -1,3 +1,5 @@
+import random
+
 class Veiculo:
     def __init__(self, capacidade):
         self.capacidade = capacidade
@@ -86,9 +88,9 @@ def inverter(rota, inicio, fim):
 
     return nova_rota
 
-def melhor_vizinho(frota, custo_total, coordenadas, deposito):
+def melhor_vizinho(frota, custo_total, coordenadas, deposito, lista_tabu, iteracao, melhor_custo):
     movimento, custo = None, None
-
+    
     for id_veiculo, veiculo in enumerate(frota):
         rota = veiculo.rota
 
@@ -98,28 +100,70 @@ def melhor_vizinho(frota, custo_total, coordenadas, deposito):
         custo_original = fit(rota, coordenadas, deposito)
 
         for inicio in range(len(rota) - 1):
-            for fim in range(inicio + 1, len(rota)):
+
+            for fim in range(inicio + 1, len(rota)):               
                 nova_rota = inverter(rota, inicio, fim)
                 custo_nova_rota = fit(nova_rota, coordenadas, deposito)
                 possivel_custo = custo_total - custo_original + custo_nova_rota
+                
+                # Pra conseguir fazer o bloqueio na busca
+                chave = (min(rota[inicio], rota[fim]), max(rota[inicio], rota[fim]))
+                bloqueio = lista_tabu.get(chave, 0)
+
+                if iteracao <= bloqueio and possivel_custo >= melhor_custo:
+                    continue
 
                 if custo is None or possivel_custo < custo:
                     custo = possivel_custo
-                    movimento = (id_veiculo, inicio, fim, nova_rota, custo)
+                    movimento = (id_veiculo, inicio, fim, nova_rota, custo, chave)
 
     return movimento
 
-def tabu(list_tabu, novo):
-    pass
-    # Quando for usar a lista tabu, da pra usar o in para verificar se o elemento esta la
+def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada):
+    custo_atual, piora = 0, 0
+    melhores_rotas = []
+    lista_tabu = {}
 
-def liberar_tabu(list_tabu):
-    pass
+    for veiculo in frota:
+        custo_atual += fit(veiculo.rota, coordenadas, deposito)
+        melhores_rotas.append(veiculo.rota.copy())
+
+    melhor_custo = custo_atual
+
+    for iteracao in range(1, iteracoes + 1):
+        movimento = melhor_vizinho(frota, custo_atual, coordenadas, deposito, lista_tabu, iteracao, melhor_custo)
+
+        if movimento is None:
+            break
+
+        id_veiculo, _, _, nova_rota, novo_custo, chave = movimento
+        frota[id_veiculo].rota = nova_rota
+        custo_atual = novo_custo
+
+        duracao_tabu = random.randint(*tau)
+        lista_tabu[chave] = iteracao + duracao_tabu
+
+        if custo_atual < melhor_custo:
+            melhor_custo = custo_atual
+            melhores_rotas = []
+
+            for veiculo in frota:
+                melhores_rotas.append(veiculo.rota.copy())
+
+            piora = 0
+        else:
+            piora += 1
+
+        if piora >= parada:
+            break
+
+    return melhores_rotas, melhor_custo
 
 def leitura(arquivo):
     secao = ""
     veiculos, dimensao, capacidade, deposito = 0, 0, 0, 0
     coordenadas, demandas = [], []
+
     with open(arquivo, "r", encoding = "utf-8") as arquivo:
         for linha in arquivo:
             if 'EOF' in linha:
@@ -136,6 +180,7 @@ def leitura(arquivo):
                     dimensao = int(valor)
                 elif campo == "CAPACITY":
                     capacidade = int(valor)
+
             lista_aux = linha.split()
             if "NODE_COORD_SECTION" in linha:
                 secao = "NODE_COORD_SECTION"
@@ -145,7 +190,7 @@ def leitura(arquivo):
                 secao = "DEPOT_SECTION"
             elif secao == "NODE_COORD_SECTION":
                 posi1, posi2 = lista_aux[1:]
-                coordenadas.append([int(posi1), int(posi2)])
+                coordenadas.append([float(posi1), float(posi2)])
             elif secao == "DEMAND_SECTION":
                 demanda = lista_aux[1]
                 demandas.append(int(demanda))
@@ -158,11 +203,21 @@ def leitura(arquivo):
     return veiculos, dimensao, capacidade, coordenadas, demandas, deposito
 
 def main():
-    arquivo = "instacias/A-n33-k5.vrp"
+    arquivo = "Instacias_melhoria/A-n32-k5.vrp"
     veiculos, dimensao, capacidade, coordenadas, demandas, deposito = leitura(arquivo)
 
-    print(distancia(1,2, coordenadas))
-    print(fit([2,3], coordenadas, deposito))
+    frota = solucao_inicial(veiculos, dimensao, capacidade, demandas, deposito)
+
+    if frota is None:
+        print("Impossivel montar a solucao inicial, deu algum b.o aqui")
+        return
+
+    melhores_rotas, melhor_custo = busca_tabu(frota, coordenadas, deposito, tau = (3, 7), iteracoes = 10, parada = 10)
+
+    print("Melhor custo: ", melhor_custo)
+
+    for numero, rota in enumerate(melhores_rotas, start = 1):
+        print(f"Veiculo {numero}: {rota}")
 
     return 
 
