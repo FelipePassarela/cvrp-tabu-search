@@ -1,70 +1,103 @@
-from .busca import (
-    ParametrosBusca,
-    ProgressoBusca,
-    avaliar_inversoes,
-    movimento_bloqueado,
-    registrar_movimento_tabu,
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
+
+from .experiment import run_experiment
+from .instances import load_default_instance
+from .routes import Coordinates, Route, Vehicle, route_cost
+from .search import (
+    ReversalKey,
+    SearchParameters,
+    SearchProgress,
+    SearchResult,
+    evaluate_reversals,
+    is_tabu,
+    register_tabu_move,
 )
-from .experimento import executar_experimento
-from .instancias import carregar_instancia_padrao
-from .rotas import (
-    fit,
-)
 
 
-def melhor_vizinho(frota, custo_total, coordenadas, deposito, lista_tabu, iteracao, melhor_custo):
-    movimento = None
-    menor_custo = None
+def main() -> None:
+    instance = load_default_instance()
+    parameters = SearchParameters(max_iterations=10, stagnation_limit=10)
+    run_experiment(instance, tabu_search, parameters)
 
-    for id_veiculo, veiculo in enumerate(frota):
-        rota = veiculo.rota
 
-        if len(rota) < 2:
+class ReversalMove(NamedTuple):
+    vehicle_index: int
+    start: int
+    end: int
+    route: Route
+    cost: int
+    key: ReversalKey
+
+
+def find_best_neighbor(
+    fleet: Sequence[Vehicle],
+    current_cost: int,
+    coordinates: Coordinates,
+    depot: int,
+    tabu_list: Mapping[tuple[int, int], int],
+    iteration: int,
+    best_cost: int,
+) -> ReversalMove | None:
+    best_move = None
+    for vehicle_index, vehicle in enumerate(fleet):
+        route = vehicle.route
+        if len(route) < 2:
             continue
 
-        custo_sem_rota = custo_total - fit(rota, coordenadas, deposito)
-        inversoes = avaliar_inversoes(rota, coordenadas, deposito, custo_sem_rota)
-
-        for inicio, fim, nova_rota, custo, chave in inversoes:
-            if movimento_bloqueado(lista_tabu, chave, iteracao, custo, melhor_custo):
+        cost_without_route = current_cost - route_cost(route, coordinates, depot)
+        reversals = evaluate_reversals(route, coordinates, depot, cost_without_route)
+        for reversal in reversals:
+            if is_tabu(tabu_list, reversal.key, iteration, reversal.cost, best_cost):
                 continue
 
-            if menor_custo is None or custo < menor_custo:
-                menor_custo = custo
-                movimento = (id_veiculo, inicio, fim, nova_rota, custo, chave)
+            if best_move is None or reversal.cost < best_move.cost:
+                best_move = ReversalMove(
+                    vehicle_index=vehicle_index,
+                    start=reversal.start,
+                    end=reversal.end,
+                    route=reversal.route,
+                    cost=reversal.cost,
+                    key=reversal.key,
+                )
 
-    return movimento
+    return best_move
 
 
-def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada, inicio_execucao):
-    progresso = ProgressoBusca(frota, coordenadas, deposito, inicio_execucao)
-    custo_atual = progresso.melhor_custo
-    lista_tabu = {}
+def tabu_search(
+    fleet: list[Vehicle],
+    coordinates: Coordinates,
+    depot: int,
+    tabu_tenure: tuple[int, int],
+    max_iterations: int,
+    stagnation_limit: int,
+    start_time: float,
+) -> SearchResult:
+    progress = SearchProgress(fleet, coordinates, depot, start_time)
+    current_cost = progress.best_cost
+    tabu_list: dict[tuple[int, int], int] = {}
 
-    for iteracao in range(1, iteracoes + 1):
-        movimento = melhor_vizinho(
-            frota, custo_atual, coordenadas, deposito, lista_tabu,
-            iteracao, progresso.melhor_custo,
+    for iteration in range(1, max_iterations + 1):
+        move = find_best_neighbor(
+            fleet,
+            current_cost,
+            coordinates,
+            depot,
+            tabu_list,
+            iteration,
+            progress.best_cost,
         )
-
-        if movimento is None:
+        if move is None:
             break
 
-        id_veiculo, _, _, nova_rota, custo_atual, chave = movimento
-        frota[id_veiculo].rota = nova_rota
-
-        registrar_movimento_tabu(lista_tabu, (chave,), iteracao, tau)
-        progresso.registrar_iteracao(iteracao, frota, custo_atual)
-        if progresso.iteracoes_sem_melhora >= parada:
+        fleet[move.vehicle_index].route = move.route
+        current_cost = move.cost
+        register_tabu_move(tabu_list, (move.key,), iteration, tabu_tenure)
+        progress.record_iteration(iteration, fleet, current_cost)
+        if progress.iterations_without_improvement >= stagnation_limit:
             break
 
-    return progresso.resultado()
-
-
-def main():
-    instancia = carregar_instancia_padrao()
-    parametros = ParametrosBusca(iteracoes=10, parada=10)
-    executar_experimento(instancia, busca_tabu, parametros)
+    return progress.result()
 
 
 if __name__ == "__main__":

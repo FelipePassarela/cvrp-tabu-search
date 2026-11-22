@@ -1,1 +1,1 @@
-"""Experimentos de busca tabu para o CVRP."""
+"""Tabu search experiments for the Capacitated Vehicle Routing Problem."""
