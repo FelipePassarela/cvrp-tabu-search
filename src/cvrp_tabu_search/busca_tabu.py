@@ -1,6 +1,8 @@
-import random
 import csv
+import random
+from pathlib import Path
 from time import perf_counter
+
 import matplotlib.pyplot as plt
 
 class Veiculo:
@@ -407,7 +409,7 @@ def main():
     resultados, melhor_historico, medicoes_ttt = [], [], []
     menor_custo = None
 
-    arquivo = f"Instancias_melhoria/{instancia}.vrp"
+    arquivo = Path(__file__).with_name("data") / f"{instancia}.vrp"
     veiculos, dimensao, capacidade, coordenadas, demandas, deposito = leitura(arquivo)
 
     for repeticao in range(1, 6):
@@ -465,4 +467,5 @@ def main():
 
     return 
 
-main()
+if __name__ == "__main__":
+    main()

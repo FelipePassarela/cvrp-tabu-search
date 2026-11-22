@@ -1,0 +1,17 @@
+[project]
+name = "cvrp-tabu-search"
+version = "0.1.0"
+description = "Experimentos de busca tabu para o Problema de Roteamento de Veículos Capacitados (CVRP)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10",
+]
+
+[project.scripts]
+cvrp-baseline = "cvrp_tabu_search.baseline:main"
+cvrp-tabu-search = "cvrp_tabu_search.busca_tabu:main"
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9"]
+build-backend = "uv_build"
