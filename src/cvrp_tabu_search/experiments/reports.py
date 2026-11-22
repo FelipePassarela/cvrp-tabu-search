@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import csv
 from collections.abc import Iterable, Iterator, Sequence
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 import matplotlib.pyplot as plt
@@ -11,6 +13,8 @@ from ..search.shared import SearchHistory, SearchParameters
 
 if TYPE_CHECKING:
     from .runner import Run
+
+DEFAULT_OUTPUT_DIR = Path("results")
 
 RUN_HEADER = (
     "instance",
@@ -42,21 +46,47 @@ def generate_reports(
     runs: Sequence[Run],
     *,
     prefix: str = "",
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> None:
+    report_directory = _create_report_directory(output_dir)
+
     name = f"{prefix}{instance.name}"
+    runs_path = report_directory / f"runs_{name}.csv"
+    history_path = report_directory / f"history_{name}.csv"
     run_rows = _run_rows(instance, parameters, runs)
-    write_csv(f"runs_{name}.csv", RUN_HEADER, run_rows)
+    write_csv(runs_path, RUN_HEADER, run_rows)
 
     best_run = min(runs, key=lambda run: run.cost)
     best_history = best_run.history
-    write_csv(f"history_{name}.csv", HISTORY_HEADER, best_history[1:])
+    write_csv(history_path, HISTORY_HEADER, best_history[1:])
 
     measurements = [
         TargetMeasurement(run.total_time_s, run.time_to_target_s) for run in runs
     ]
     generate_plots(
-        instance.name, instance.optimal_cost, best_history, measurements, prefix=prefix
+        instance.name,
+        instance.optimal_cost,
+        best_history,
+        measurements,
+        prefix=prefix,
+        output_dir=report_directory,
     )
+
+
+def _create_report_directory(output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    report_directory = output_dir / timestamp
+    sequence = 1
+
+    while True:
+        try:
+            report_directory.mkdir()
+        except FileExistsError:
+            sequence += 1
+            report_directory = output_dir / f"{timestamp}-{sequence}"
+        else:
+            return report_directory
 
 
 def _run_rows(
@@ -79,7 +109,7 @@ def _run_rows(
 
 
 def write_csv(
-    path: str, header: Iterable[str], rows: Iterable[Iterable[CsvValue]]
+    path: str | Path, header: Iterable[str], rows: Iterable[Iterable[CsvValue]]
 ) -> None:
     with open(path, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
@@ -94,17 +124,21 @@ def generate_plots(
     measurements: Sequence[TargetMeasurement],
     *,
     prefix: str = "",
+    output_dir: Path | None = None,
 ) -> None:
+    if output_dir is None:
+        output_dir = _create_report_directory(DEFAULT_OUTPUT_DIR)
+
     plt.style.use("default")
     name = f"{prefix}{instance_name}"
-    _plot_convergence(
-        instance_name, optimal_cost, best_history, f"convergence_{name}.png"
-    )
-    _plot_time_to_target(instance_name, optimal_cost, measurements, f"ttt_{name}.png")
+    convergence_path = output_dir / f"convergence_{name}.png"
+    time_to_target_path = output_dir / f"ttt_{name}.png"
+    _plot_convergence(instance_name, optimal_cost, best_history, convergence_path)
+    _plot_time_to_target(instance_name, optimal_cost, measurements, time_to_target_path)
 
 
 def _plot_convergence(
-    instance_name: str, optimal_cost: int, history: SearchHistory, path: str
+    instance_name: str, optimal_cost: int, history: SearchHistory, path: Path
 ) -> None:
     iterations: list[int] = []
     costs: list[int] = []
@@ -136,7 +170,7 @@ def _plot_time_to_target(
     instance_name: str,
     optimal_cost: int,
     measurements: Sequence[TargetMeasurement],
-    path: str,
+    path: Path,
 ) -> None:
     times, percentages, hits = _time_to_target_curve(measurements)
     total = len(measurements)
