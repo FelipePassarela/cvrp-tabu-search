@@ -2,7 +2,7 @@ from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
 from .experiment import run_experiment
-from .instances import load_default_instance
+from .instances import Instance
 from .routes import Coordinates, Route, Vehicle, route_cost
 from .search import (
     ReversalKey,
@@ -15,10 +15,8 @@ from .search import (
 )
 
 
-def main() -> None:
-    instance = load_default_instance()
-    parameters = SearchParameters(max_iterations=10, stagnation_limit=10)
-    run_experiment(instance, tabu_search, parameters)
+def run_baseline_experiment(instance: Instance, parameters: SearchParameters) -> bool:
+    return run_experiment(instance, tabu_search, parameters)
 
 
 class ReversalMove(NamedTuple):
@@ -98,7 +96,3 @@ def tabu_search(
             break
 
     return progress.result()
-
-
-if __name__ == "__main__":
-    main()

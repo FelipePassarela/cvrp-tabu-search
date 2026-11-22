@@ -42,10 +42,11 @@ def test_experiment_rebuilds_the_initial_fleet_before_every_run(
         max_iterations=1, stagnation_limit=5, tabu_tenure=TabuTenure(2, 2)
     )
 
-    experiment.run_experiment(
+    completed = experiment.run_experiment(
         rectangle_instance, baseline.tabu_search, parameters, report_prefix="trial_"
     )
 
+    assert completed
     publish.assert_called_once()
     instance, reported_parameters, runs = publish.call_args.args
     assert instance is rectangle_instance
@@ -97,8 +98,9 @@ def test_experiment_skips_search_and_reports_when_the_initial_fleet_is_infeasibl
     parameters = SearchParameters(max_iterations=10, stagnation_limit=5)
     monkeypatch.chdir(tmp_path)
 
-    experiment.run_experiment(instance, algorithm, parameters)
+    completed = experiment.run_experiment(instance, algorithm, parameters)
 
+    assert not completed
     algorithm.assert_not_called()
     assert list(tmp_path.iterdir()) == []
     assert "Could not build a feasible initial solution." in capsys.readouterr().out

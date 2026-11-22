@@ -32,7 +32,7 @@ def run_experiment(
     parameters: SearchParameters,
     *,
     report_prefix: str = "",
-) -> None:
+) -> bool:
     def run_search(fleet: list[Vehicle], start_time: float) -> SearchResult:
         return search(
             fleet,
@@ -45,8 +45,11 @@ def run_experiment(
         )
 
     runs = _run_repetitions(instance, run_search)
-    if runs is not None:
-        generate_reports(instance, parameters, runs, prefix=report_prefix)
+    if runs is None:
+        return False
+
+    generate_reports(instance, parameters, runs, prefix=report_prefix)
+    return True
 
 
 def _run_repetitions(instance: Instance, search: SearchRunner) -> list[Run] | None:
