@@ -1,0 +1,30 @@
+[project]
+name = "cvrp-tabu-search"
+version = "0.1.0"
+description = "Tabu search experiments for the Capacitated Vehicle Routing Problem (CVRP)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10",
+]
+
+[project.scripts]
+cvrp-baseline = "cvrp_tabu_search.baseline:main"
+cvrp-tabu-search = "cvrp_tabu_search.tabu_search:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "ruff>=0.17.6",
+    "ty>=0.0.107",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9"]
+build-backend = "uv_build"
+
+[tool.ruff.lint]
+extend-select = ["I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
