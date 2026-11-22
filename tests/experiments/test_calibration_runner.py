@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import pytest
 
 from cvrp_tabu_search.experiments import calibration
-from cvrp_tabu_search.experiments.runner import Run
-from cvrp_tabu_search.instances import load_default_instance
+from cvrp_tabu_search.experiments.execution import Run, SearchAlgorithm
+from cvrp_tabu_search.instances import Instance, load_default_instance
 from cvrp_tabu_search.search.shared import SearchParameters, TabuTenure
 
 
@@ -31,7 +31,11 @@ def test_calibration_preserves_completed_rows_when_a_later_trial_fails(
     )
 
     def run_trial_and_check_table(
-        _instance: object, parameters: SearchParameters, *, seed: int
+        _instance: Instance,
+        _search: SearchAlgorithm,
+        parameters: SearchParameters,
+        *,
+        seed: int,
     ) -> Run | None:
         assert seed == run.seed
         if parameters.tabu_tenure == tenures[0]:
@@ -42,15 +46,16 @@ def test_calibration_preserves_completed_rows_when_a_later_trial_fails(
         return None
 
     run_trial = Mock(side_effect=run_trial_and_check_table)
-    monkeypatch.setattr(calibration, "run_tabu_search_repetition", run_trial)
+    monkeypatch.setattr(calibration, "run_once", run_trial)
 
     with pytest.raises(calibration.CalibrationError, match=instance.name):
         calibration.run_calibration(
             [instance], tenures, time_limit_s=180.0, output_dir=tmp_path
         )
 
-    assert [call.args[1].tabu_tenure for call in run_trial.call_args_list] == tenures
-    assert {call.args[1].time_limit_s for call in run_trial.call_args_list} == {180.0}
+    trial_parameters = [call.args[2] for call in run_trial.call_args_list]
+    assert [parameters.tabu_tenure for parameters in trial_parameters] == tenures
+    assert {parameters.time_limit_s for parameters in trial_parameters} == {180.0}
     [row] = _read_rows(tmp_path)
     assert row["instance"] == instance.name
     assert row["tabu_tenure_max"] == "7"

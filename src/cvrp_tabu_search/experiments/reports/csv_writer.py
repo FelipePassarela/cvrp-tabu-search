@@ -9,7 +9,7 @@ from ...instances import Instance
 from ...search.shared import SearchHistory, SearchParameters
 
 if TYPE_CHECKING:
-    from ..runner import Run
+    from ..execution import Run
 
 RUN_HEADER = (
     "instance",

@@ -6,8 +6,8 @@ from unittest.mock import Mock
 import pytest
 
 from cvrp_tabu_search.experiments import reports
+from cvrp_tabu_search.experiments.execution import Run
 from cvrp_tabu_search.experiments.reports import TargetMeasurement, directory, plots
-from cvrp_tabu_search.experiments.runner import Run
 from cvrp_tabu_search.instances import Instance
 from cvrp_tabu_search.search.shared import (
     SearchHistoryEntry,

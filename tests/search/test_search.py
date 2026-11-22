@@ -3,7 +3,7 @@ from unittest.mock import DEFAULT, Mock
 
 import pytest
 
-from cvrp_tabu_search.experiments.runner import SearchAlgorithm
+from cvrp_tabu_search.experiments.execution import SearchAlgorithm
 from cvrp_tabu_search.routes import Vehicle, build_initial_solution
 from cvrp_tabu_search.search import baseline, shared, tabu
 

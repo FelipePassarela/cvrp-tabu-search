@@ -7,9 +7,9 @@ from typing import NamedTuple
 
 from ..instances import Instance, load_default_instance, load_instance
 from ..search.shared import SearchParameters, TabuTenure
+from .execution import run_once, tabu_search_for
 from .reports import write_csv
 from .reports.directory import create_report_directory
-from .runner import run_tabu_search_repetition
 
 CALIBRATION_TIME_LIMIT_S = 180.0
 CALIBRATION_SEED = 1
@@ -118,7 +118,8 @@ def _run_trial(
         tabu_tenure=tenure,
         time_limit_s=time_limit_s,
     )
-    run = run_tabu_search_repetition(instance, parameters, seed=CALIBRATION_SEED)
+    search = tabu_search_for(instance)
+    run = run_once(instance, search, parameters, seed=CALIBRATION_SEED)
     if run is None:
         raise CalibrationError(
             f"Could not build a feasible initial solution for {instance.name}."
