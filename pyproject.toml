@@ -6,11 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "matplotlib>=3.10",
+    "typer>=0.29.2",
 ]
 
 [project.scripts]
-cvrp-baseline = "cvrp_tabu_search.baseline:main"
-cvrp-tabu-search = "cvrp_tabu_search.tabu_search:main"
+cvrp = "cvrp_tabu_search.cli:app"
 
 [dependency-groups]
 dev = [

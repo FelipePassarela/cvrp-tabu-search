@@ -1,12 +1,15 @@
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from time import perf_counter
 
-from .instances import Instance
+from ..instances import Instance
+from ..routes import Coordinates, Vehicle, build_initial_solution
+from ..search.baseline import tabu_search as baseline_search
+from ..search.shared import SearchHistory, SearchParameters, SearchResult
+from ..search.tabu import tabu_search
 from .reports import generate_reports
-from .routes import Coordinates, Vehicle, build_initial_solution
-from .search import SearchHistory, SearchParameters, SearchResult
 
 REPETITIONS = 5
 
@@ -26,13 +29,24 @@ class Run:
     time_to_target_s: float | None
 
 
+def run_baseline_experiment(instance: Instance, parameters: SearchParameters) -> bool:
+    return run_experiment(instance, baseline_search, parameters)
+
+
+def run_tabu_search_experiment(
+    instance: Instance, parameters: SearchParameters
+) -> bool:
+    search = partial(tabu_search, demands=instance.demands)
+    return run_experiment(instance, search, parameters, report_prefix="tabu_")
+
+
 def run_experiment(
     instance: Instance,
     search: SearchAlgorithm,
     parameters: SearchParameters,
     *,
     report_prefix: str = "",
-) -> None:
+) -> bool:
     def run_search(fleet: list[Vehicle], start_time: float) -> SearchResult:
         return search(
             fleet,
@@ -45,8 +59,11 @@ def run_experiment(
         )
 
     runs = _run_repetitions(instance, run_search)
-    if runs is not None:
-        generate_reports(instance, parameters, runs, prefix=report_prefix)
+    if runs is None:
+        return False
+
+    generate_reports(instance, parameters, runs, prefix=report_prefix)
+    return True
 
 
 def _run_repetitions(instance: Instance, search: SearchRunner) -> list[Run] | None:

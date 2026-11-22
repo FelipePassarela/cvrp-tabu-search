@@ -15,15 +15,32 @@ uv sync --locked
 ## Execução
 
 ```sh
-uv run cvrp-baseline
-uv run cvrp-tabu-search
+uv run cvrp --help
+uv run cvrp baseline
+uv run cvrp tabu-search
 ```
 
-O primeiro comando executa o experimento original com inversões dentro de cada rota. O segundo executa a variante com movimentos entre rotas, intensificação e diversificação. Ambos usam a instância `A-n32-k5.vrp`, incluída em [`src/cvrp_tabu_search/data/`](src/cvrp_tabu_search/data/), e gravam os resultados em CSV e PNG no diretório de trabalho.
+`baseline` executa o experimento original com inversões dentro de cada rota. `tabu-search` executa a variante com movimentos entre rotas, intensificação e diversificação. Por padrão, ambos usam a instância `A-n32-k5.vrp`, incluída em [`src/cvrp_tabu_search/data/`](src/cvrp_tabu_search/data/), e gravam os resultados em CSV e PNG no diretório de trabalho.
+
+Use `--max-iterations` e `--stagnation-limit` para ajustar os limites. Para usar outra instância CVRP com distâncias `EUC_2D`, informe o arquivo e seu custo ótimo de referência, que serve de alvo no relatório *time-to-target*.
+
+```sh
+uv run cvrp tabu-search --instance benchmarks/general/A-n33-k5.vrp --target-cost 661 --max-iterations 100 --stagnation-limit 40
+```
+
+A CLI também pode ser executada com `uv run python -m cvrp_tabu_search`.
 
 Os resultados usam os prefixos `runs_`, `history_`, `convergence_` e `ttt_`. A variante com movimentos entre rotas inclui `tabu_` antes do nome da instância.
 
 ## Desenvolvimento
+
+O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).
+
+- [`search/`](src/cvrp_tabu_search/search/) contém os algoritmos e as operações de busca compartilhadas.
+- [`experiments/`](src/cvrp_tabu_search/experiments/) executa os experimentos e gera os relatórios.
+- `cli.py` recebe os argumentos. `instances.py` carrega os dados e `routes.py` reúne as operações de rota.
+
+Os testes acompanham essa organização em `tests/search/`, `tests/experiments/` e `tests/cli/`. Em `tests/cli/`, os testes dos comandos e dos pontos de entrada ficam em arquivos próprios.
 
 Execute os testes com pytest. Use Ruff para lint e formatação e ty para checagem de tipos.
 

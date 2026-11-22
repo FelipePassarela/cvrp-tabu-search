@@ -1,25 +1,14 @@
 from collections.abc import Sequence
 from functools import partial
 
-from .experiment import run_experiment
-from .instances import load_default_instance
-from .neighborhood import Move, TabuKeyTuple, find_best_neighbor
-from .routes import Coordinates, Route, Vehicle
-from .search import (
-    SearchParameters,
+from ..routes import Coordinates, Route, Vehicle
+from .moves import Move, TabuKeyTuple
+from .neighborhood import find_best_neighbor
+from .shared import (
     SearchProgress,
     SearchResult,
     register_tabu_move,
 )
-
-REPORT_PREFIX = "tabu_"
-
-
-def main() -> None:
-    instance = load_default_instance()
-    parameters = SearchParameters(max_iterations=60, stagnation_limit=30)
-    search = partial(tabu_search, demands=instance.demands)
-    run_experiment(instance, search, parameters, report_prefix=REPORT_PREFIX)
 
 
 def tabu_search(
@@ -105,7 +94,3 @@ def _restore_routes(
     for vehicle, route in zip(fleet, routes, strict=True):
         vehicle.route = route.copy()
         vehicle.load = sum(demands[customer - 1] for customer in route)
-
-
-if __name__ == "__main__":
-    main()

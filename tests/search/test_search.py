@@ -3,10 +3,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from cvrp_tabu_search import baseline, search
-from cvrp_tabu_search import tabu_search as advanced
-from cvrp_tabu_search.experiment import SearchAlgorithm
+from cvrp_tabu_search.experiments.runner import SearchAlgorithm
 from cvrp_tabu_search.routes import Vehicle, build_initial_solution
+from cvrp_tabu_search.search import baseline, shared, tabu
 
 RECTANGLE = [(0, 0), (4, 0), (0, 3), (4, 3)]
 PLATEAU_COORDINATES = [(0, 0)] * 5
@@ -49,17 +48,17 @@ def test_tabu_blocking_and_aspiration(
 ) -> None:
     tabu_list = {"move": 4} if registered else {}
 
-    assert search.is_tabu(tabu_list, "move", iteration, cost, best_cost=80) is blocked
+    assert shared.is_tabu(tabu_list, "move", iteration, cost, best_cost=80) is blocked
 
 
 def test_register_move_shares_one_tenure_across_its_keys(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     sample_tenure = Mock(return_value=4)
-    monkeypatch.setattr(search.random, "randint", sample_tenure)
+    monkeypatch.setattr(shared.random, "randint", sample_tenure)
     tabu_list = {"existing": 20, "first": 3}
 
-    search.register_tabu_move(
+    shared.register_tabu_move(
         tabu_list, ("first", "second"), iteration=7, tenure=(2, 6)
     )
 
@@ -71,8 +70,8 @@ def test_progress_tracks_improvement_and_keeps_an_independent_best_route(
     rectangle_fleet: list[Vehicle], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     clock = iter([100.0, 100.25, 100.5, 100.75])
-    monkeypatch.setattr(search, "perf_counter", lambda: next(clock))
-    progress = search.SearchProgress(
+    monkeypatch.setattr(shared, "perf_counter", lambda: next(clock))
+    progress = shared.SearchProgress(
         rectangle_fleet, RECTANGLE, depot=1, start_time=100.0
     )
     route = rectangle_fleet[0].route
@@ -138,7 +137,7 @@ def test_baseline_applies_an_improving_reversal(rectangle_fleet: list[Vehicle]) 
 
 @pytest.mark.parametrize(
     "algorithm",
-    [baseline.tabu_search, partial(advanced.tabu_search, demands=PLATEAU_DEMANDS)],
+    [baseline.tabu_search, partial(tabu.tabu_search, demands=PLATEAU_DEMANDS)],
     ids=["baseline", "advanced"],
 )
 @pytest.mark.parametrize(
@@ -208,10 +207,10 @@ def test_advanced_search_uses_phases_and_retries_unavailable_diversification(
     expected_final_attempts: int,
 ) -> None:
     # A single route permits reversals throughout the plateau and has no inter-route move.
-    select_neighbor = Mock(wraps=advanced.find_best_neighbor)
-    monkeypatch.setattr(advanced, "find_best_neighbor", select_neighbor)
+    select_neighbor = Mock(wraps=tabu.find_best_neighbor)
+    monkeypatch.setattr(tabu, "find_best_neighbor", select_neighbor)
 
-    _, _, history = advanced.tabu_search(
+    _, _, history = tabu.tabu_search(
         plateau_fleet,
         PLATEAU_COORDINATES,
         1,
