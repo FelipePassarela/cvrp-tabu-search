@@ -4,11 +4,15 @@ from unittest.mock import Mock
 
 import pytest
 
-from cvrp_tabu_search import reports
-from cvrp_tabu_search.experiment import Run
+from cvrp_tabu_search.experiments import reports
+from cvrp_tabu_search.experiments.reports import TargetMeasurement
+from cvrp_tabu_search.experiments.runner import Run
 from cvrp_tabu_search.instances import Instance
-from cvrp_tabu_search.reports import TargetMeasurement
-from cvrp_tabu_search.search import SearchHistoryEntry, SearchParameters, TabuTenure
+from cvrp_tabu_search.search.shared import (
+    SearchHistoryEntry,
+    SearchParameters,
+    TabuTenure,
+)
 
 
 def _read_csv(path: Path) -> list[list[str]]:

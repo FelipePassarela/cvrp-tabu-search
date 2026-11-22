@@ -1,22 +1,15 @@
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
-from .experiment import run_experiment
-from .instances import Instance
-from .routes import Coordinates, Route, Vehicle, route_cost
-from .search import (
+from ..routes import Coordinates, Route, Vehicle, route_cost
+from .shared import (
     ReversalKey,
-    SearchParameters,
     SearchProgress,
     SearchResult,
     evaluate_reversals,
     is_tabu,
     register_tabu_move,
 )
-
-
-def run_baseline_experiment(instance: Instance, parameters: SearchParameters) -> bool:
-    return run_experiment(instance, tabu_search, parameters)
 
 
 class ReversalMove(NamedTuple):

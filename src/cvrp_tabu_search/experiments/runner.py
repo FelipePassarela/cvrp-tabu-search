@@ -1,12 +1,15 @@
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from time import perf_counter
 
-from .instances import Instance
+from ..instances import Instance
+from ..routes import Coordinates, Vehicle, build_initial_solution
+from ..search.baseline import tabu_search as baseline_search
+from ..search.shared import SearchHistory, SearchParameters, SearchResult
+from ..search.tabu import tabu_search
 from .reports import generate_reports
-from .routes import Coordinates, Vehicle, build_initial_solution
-from .search import SearchHistory, SearchParameters, SearchResult
 
 REPETITIONS = 5
 
@@ -24,6 +27,17 @@ class Run:
     total_time_s: float
     time_to_best_s: float | None
     time_to_target_s: float | None
+
+
+def run_baseline_experiment(instance: Instance, parameters: SearchParameters) -> bool:
+    return run_experiment(instance, baseline_search, parameters)
+
+
+def run_tabu_search_experiment(
+    instance: Instance, parameters: SearchParameters
+) -> bool:
+    search = partial(tabu_search, demands=instance.demands)
+    return run_experiment(instance, search, parameters, report_prefix="tabu_")
 
 
 def run_experiment(

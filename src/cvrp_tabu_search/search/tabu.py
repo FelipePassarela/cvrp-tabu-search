@@ -1,25 +1,14 @@
 from collections.abc import Sequence
 from functools import partial
 
-from .experiment import run_experiment
-from .instances import Instance
-from .neighborhood import Move, TabuKeyTuple, find_best_neighbor
-from .routes import Coordinates, Route, Vehicle
-from .search import (
-    SearchParameters,
+from ..routes import Coordinates, Route, Vehicle
+from .moves import Move, TabuKeyTuple
+from .neighborhood import find_best_neighbor
+from .shared import (
     SearchProgress,
     SearchResult,
     register_tabu_move,
 )
-
-REPORT_PREFIX = "tabu_"
-
-
-def run_tabu_search_experiment(
-    instance: Instance, parameters: SearchParameters
-) -> bool:
-    search = partial(tabu_search, demands=instance.demands)
-    return run_experiment(instance, search, parameters, report_prefix=REPORT_PREFIX)
 
 
 def tabu_search(

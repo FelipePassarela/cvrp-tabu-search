@@ -1,38 +1,10 @@
 from collections.abc import Mapping, Sequence
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
-from .routes import Coordinates, Route, Vehicle, route_cost
-from .search import evaluate_reversals, is_tabu
-
-type TabuKeyTuple = tuple[Literal["reverse", "return"], int, int]
-
-
-class ReversalTabuKey(NamedTuple):
-    kind: Literal["reverse"]
-    lower_customer: int
-    upper_customer: int
-
-
-class ReturnTabuKey(NamedTuple):
-    kind: Literal["return"]
-    customer: int
-    vehicle_index: int
-
-
-type TabuKey = ReversalTabuKey | ReturnTabuKey
-
-
-class RouteUpdate(NamedTuple):
-    vehicle_index: int
-    route: Route
-    load: int
-
-
-class Move(NamedTuple):
-    route_updates: tuple[RouteUpdate, ...]
-    cost: int
-    tabu_keys: tuple[TabuKey, ...]
-    customers: tuple[int, ...]
+from ..routes import Coordinates, Vehicle, route_cost
+from .move_selection import MoveSelector
+from .moves import Move, TabuKeyTuple
+from .shared import evaluate_reversals
 
 
 class _RoutePair(NamedTuple):
@@ -58,67 +30,11 @@ def find_best_neighbor(
     diversify: bool = False,
 ) -> Move | None:
     neighborhood = _Neighborhood(fleet, current_cost, coordinates, depot, demands)
-    selector = _MoveSelector(
+    selector = MoveSelector(
         tabu_list, iteration, best_cost, frequencies, diversify=diversify
     )
     neighborhood.evaluate(selector, intensify=intensify, diversify=diversify)
     return selector.best_move
-
-
-def _named_tabu_key(key: TabuKeyTuple) -> TabuKey:
-    kind, first, second = key
-    if kind == "reverse":
-        return ReversalTabuKey(kind, first, second)
-
-    return ReturnTabuKey(kind, first, second)
-
-
-class _MoveSelector:
-    def __init__(
-        self,
-        tabu_list: Mapping[TabuKeyTuple, int],
-        iteration: int,
-        best_cost: int,
-        frequencies: Mapping[int, int],
-        *,
-        diversify: bool,
-    ) -> None:
-        self._tabu_list = tabu_list
-        self._iteration = iteration
-        self._best_cost = best_cost
-        self._frequencies = frequencies
-        self._diversify = diversify
-        self._best_priority: tuple[int, ...] | None = None
-        self.best_move: Move | None = None
-
-    def consider(
-        self,
-        route_updates: tuple[tuple[int, Route, int], ...],
-        cost: int,
-        test_keys: tuple[TabuKeyTuple, ...],
-        tabu_keys: tuple[TabuKeyTuple, ...],
-        customers: tuple[int, ...],
-    ) -> None:
-        for key in test_keys:
-            if is_tabu(self._tabu_list, key, self._iteration, cost, self._best_cost):
-                return
-
-        priority: tuple[int, ...] = (cost,)
-        if self._diversify:
-            move_frequency = sum(
-                self._frequencies.get(customer, 0) for customer in customers
-            )
-            priority = (move_frequency, cost)
-
-        if self._best_priority is None or priority < self._best_priority:
-            self._best_priority = priority
-            # Build named records only when a candidate becomes the best move.
-            self.best_move = Move(
-                route_updates=tuple(RouteUpdate(*update) for update in route_updates),
-                cost=cost,
-                tabu_keys=tuple(_named_tabu_key(key) for key in tabu_keys),
-                customers=customers,
-            )
 
 
 class _Neighborhood:
@@ -140,7 +56,7 @@ class _Neighborhood:
         ]
 
     def evaluate(
-        self, selector: _MoveSelector, *, intensify: bool, diversify: bool
+        self, selector: MoveSelector, *, intensify: bool, diversify: bool
     ) -> None:
         for index, vehicle in enumerate(self._fleet):
             if not diversify:
@@ -151,7 +67,7 @@ class _Neighborhood:
                 self._evaluate_inter_route_moves(index, vehicle, selector)
 
     def _evaluate_reversals(
-        self, index: int, vehicle: Vehicle, selector: _MoveSelector
+        self, index: int, vehicle: Vehicle, selector: MoveSelector
     ) -> None:
         cost_without_route = self._current_cost - self._route_costs[index]
         reversals = evaluate_reversals(
@@ -164,7 +80,7 @@ class _Neighborhood:
             selector.consider(updates, reversal.cost, (key,), (key,), ())
 
     def _evaluate_inter_route_moves(
-        self, source_index: int, source: Vehicle, selector: _MoveSelector
+        self, source_index: int, source: Vehicle, selector: MoveSelector
     ) -> None:
         cost_without_source = self._current_cost - self._route_costs[source_index]
         for target_index, target in enumerate(self._fleet):
@@ -189,7 +105,7 @@ class _Neighborhood:
         position: int,
         customer: int,
         demand: int,
-        selector: _MoveSelector,
+        selector: MoveSelector,
     ) -> None:
         target_load = pair.target.load + demand
         # Removing the last customer would leave the source route unused.
@@ -221,7 +137,7 @@ class _Neighborhood:
         position: int,
         customer: int,
         demand: int,
-        selector: _MoveSelector,
+        selector: MoveSelector,
     ) -> None:
         coordinates, depot = self._coordinates, self._depot
         for target_position, target_customer in enumerate(pair.target.route):

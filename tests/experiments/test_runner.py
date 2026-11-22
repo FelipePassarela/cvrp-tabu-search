@@ -5,10 +5,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from cvrp_tabu_search import baseline, experiment, search
-from cvrp_tabu_search.experiment import Run
+from cvrp_tabu_search.experiments import runner
+from cvrp_tabu_search.experiments.runner import Run
 from cvrp_tabu_search.instances import Instance
-from cvrp_tabu_search.search import (
+from cvrp_tabu_search.search import baseline, shared
+from cvrp_tabu_search.search.shared import (
     SearchHistoryEntry,
     SearchParameters,
     SearchResult,
@@ -34,15 +35,15 @@ def test_experiment_rebuilds_the_initial_fleet_before_every_run(
     rectangle_instance: Instance, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     clock = count(start=100)
-    monkeypatch.setattr(experiment, "perf_counter", lambda: next(clock))
-    monkeypatch.setattr(search, "perf_counter", lambda: next(clock))
+    monkeypatch.setattr(runner, "perf_counter", lambda: next(clock))
+    monkeypatch.setattr(shared, "perf_counter", lambda: next(clock))
     publish = Mock()
-    monkeypatch.setattr(experiment, "generate_reports", publish)
+    monkeypatch.setattr(runner, "generate_reports", publish)
     parameters = SearchParameters(
         max_iterations=1, stagnation_limit=5, tabu_tenure=TabuTenure(2, 2)
     )
 
-    completed = experiment.run_experiment(
+    completed = runner.run_experiment(
         rectangle_instance, baseline.tabu_search, parameters, report_prefix="trial_"
     )
 
@@ -72,8 +73,8 @@ def test_experiment_seeds_each_search_reproducibly(
     rectangle_instance: Instance, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     generator = random.Random()
-    monkeypatch.setattr(experiment, "random", generator)
-    monkeypatch.setattr(experiment, "generate_reports", Mock())
+    monkeypatch.setattr(runner, "random", generator)
+    monkeypatch.setattr(runner, "generate_reports", Mock())
     samples: list[float] = []
 
     def observe_sample(*_arguments: object) -> SearchResult:
@@ -85,7 +86,7 @@ def test_experiment_seeds_each_search_reproducibly(
         )
 
     parameters = SearchParameters(max_iterations=0, stagnation_limit=5)
-    experiment.run_experiment(rectangle_instance, observe_sample, parameters)
+    runner.run_experiment(rectangle_instance, observe_sample, parameters)
 
     assert samples == [random.Random(seed).random() for seed in range(1, 6)]
 
@@ -98,7 +99,7 @@ def test_experiment_skips_search_and_reports_when_the_initial_fleet_is_infeasibl
     parameters = SearchParameters(max_iterations=10, stagnation_limit=5)
     monkeypatch.chdir(tmp_path)
 
-    completed = experiment.run_experiment(instance, algorithm, parameters)
+    completed = runner.run_experiment(instance, algorithm, parameters)
 
     assert not completed
     algorithm.assert_not_called()
@@ -121,7 +122,7 @@ def test_experiment_measures_the_first_relevant_iteration(
         SearchHistoryEntry(3, 12, 0.75, 16),
     ]
 
-    time_to_best, time_to_target = experiment._measure_times(
+    time_to_best, time_to_target = runner._measure_times(
         history, final_cost=12, target_cost=target
     )
 

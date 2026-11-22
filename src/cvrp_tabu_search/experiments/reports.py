@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import matplotlib.pyplot as plt
 
-from .instances import Instance
-from .search import SearchHistory, SearchParameters
+from ..instances import Instance
+from ..search.shared import SearchHistory, SearchParameters
 
 if TYPE_CHECKING:
-    from .experiment import Run
+    from .runner import Run
 
 RUN_HEADER = (
     "instance",

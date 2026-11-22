@@ -3,16 +3,16 @@ from dataclasses import dataclass
 
 import pytest
 
-from cvrp_tabu_search.neighborhood import (
+from cvrp_tabu_search.routes import Coordinates, Route, Vehicle
+from cvrp_tabu_search.search.moves import (
     Move,
     ReturnTabuKey,
     ReversalTabuKey,
     RouteUpdate,
     TabuKeyTuple,
-    find_best_neighbor,
 )
-from cvrp_tabu_search.routes import Coordinates, Route, Vehicle
-from cvrp_tabu_search.tabu_search import tabu_search
+from cvrp_tabu_search.search.neighborhood import find_best_neighbor
+from cvrp_tabu_search.search.tabu import tabu_search
 
 
 @dataclass(frozen=True)

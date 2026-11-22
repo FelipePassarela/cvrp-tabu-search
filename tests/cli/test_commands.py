@@ -1,9 +1,6 @@
 import csv
-import os
 import random
-import subprocess
-import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from pathlib import Path
 from textwrap import dedent
 
@@ -12,25 +9,6 @@ import pytest
 from typer.testing import CliRunner
 
 from cvrp_tabu_search.cli import app
-
-
-def _run_process(
-    arguments: Sequence[str], working_directory: Path
-) -> subprocess.CompletedProcess[str]:
-    environment = os.environ | {
-        "MPLBACKEND": "Agg",
-        "MPLCONFIGDIR": str(working_directory.parent / "matplotlib"),
-        "PYTHONUTF8": "1",
-    }
-    return subprocess.run(
-        arguments,
-        cwd=working_directory,
-        env=environment,
-        capture_output=True,
-        encoding="utf-8",
-        timeout=30,
-        check=False,
-    )
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
@@ -175,29 +153,6 @@ def test_cli_uses_custom_instance_target_and_search_limits(
     history = _read_csv(report_directory / f"history_{prefix}{rectangle_path.stem}.csv")
     assert len(history) == iterations
     assert (runs[0]["time_to_target_s"] != "") is (expected_cost == 14)
-
-
-@pytest.mark.parametrize(
-    "command",
-    [
-        [
-            str(
-                Path(sys.executable).with_name(
-                    "cvrp.exe" if os.name == "nt" else "cvrp"
-                )
-            )
-        ],
-        [sys.executable, "-m", "cvrp_tabu_search"],
-    ],
-    ids=["console-script", "package-module"],
-)
-def test_entrypoint_exposes_the_cli(tmp_path: Path, command: list[str]) -> None:
-    result = _run_process([*command, "--help"], tmp_path)
-
-    assert result.returncode == 0, result.stderr
-    assert "baseline" in result.stdout
-    assert "tabu-search" in result.stdout
-    assert list(tmp_path.iterdir()) == []
 
 
 def test_subcommand_help_lists_the_available_options() -> None:

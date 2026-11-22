@@ -3,10 +3,9 @@ from typing import Annotated
 
 import typer
 
-from .baseline import run_baseline_experiment
+from .experiments.runner import run_baseline_experiment, run_tabu_search_experiment
 from .instances import Instance, load_default_instance, load_instance
-from .search import SearchParameters
-from .tabu_search import run_tabu_search_experiment
+from .search.shared import SearchParameters
 
 app = typer.Typer(help="Run the CVRP tabu search experiments.", no_args_is_help=True)
 
