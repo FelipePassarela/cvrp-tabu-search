@@ -1,6 +1,7 @@
 import random
 import csv
 from time import perf_counter
+import matplotlib.pyplot as plt
 
 class Veiculo:
     def __init__(self, capacidade):
@@ -131,7 +132,7 @@ def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada, inicio_exec
         melhores_rotas.append(veiculo.rota.copy())
 
     melhor_custo = custo_atual
-    historico = [(0, melhor_custo, perf_counter() - inicio_execucao)]
+    historico = [(0, melhor_custo, perf_counter() - inicio_execucao, custo_atual)]
 
     for iteracao in range(1, iteracoes + 1):
         movimento = melhor_vizinho(frota, custo_atual, coordenadas, deposito, lista_tabu, iteracao, melhor_custo)
@@ -158,7 +159,7 @@ def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada, inicio_exec
             piora += 1
 
         tempo_s = perf_counter() - inicio_execucao
-        historico.append((iteracao, melhor_custo, tempo_s))
+        historico.append((iteracao, melhor_custo, tempo_s, custo_atual))
 
         if piora >= parada:
             break
@@ -214,12 +215,74 @@ def salvar_csv(caminho, cabecalho, linhas):
         escritor.writerow(cabecalho)
         escritor.writerows(linhas)
 
+def gerar_graficos(instancia, otimo, melhor_historico, medicoes_ttt):
+    plt.style.use("default")
+
+    iteracoes = []
+    custos = []
+
+    # A posição 0 do histórico é a solução inicial.
+    for iteracao, _, _, custo_atual in melhor_historico[1:]:
+        iteracoes.append(iteracao)
+        custos.append(custo_atual)
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(iteracoes, custos, color="tab:blue", label="Custo da iteração")
+    ax.axhline(otimo, color="tab:orange", linestyle="--", label=f"Ótimo: {otimo}")
+
+    ax.set_title(f"Evolução da busca tabu — {instancia}")
+    ax.set_xlabel("Iteração")
+    ax.set_ylabel("Custo total")
+    ax.legend()
+
+    fig.tight_layout()
+    fig.savefig(f"evolucao_{instancia}.png", dpi=200)
+    plt.close(fig)
+
+    tempos_alvo = []
+    maior_tempo_total = 0
+
+    for tempo_total, tempo_alvo in medicoes_ttt:
+        maior_tempo_total = max(maior_tempo_total, tempo_total)
+        if tempo_alvo is not None:
+            tempos_alvo.append(tempo_alvo)
+
+    tempos_alvo.sort()
+    total = len(medicoes_ttt)
+    tempos = [0]
+    porcentagens = [0]
+
+    for acertos, tempo in enumerate(tempos_alvo, start=1):
+        tempos.append(tempo)
+        porcentagens.append(100 * acertos / total)
+
+    # Estende a curva até o fim do tempo observado.
+    tempos.append(maior_tempo_total)
+    porcentagens.append(porcentagens[-1])
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.step(
+        tempos, porcentagens, where="post", color="tab:blue",
+        label=f"Alvo {otimo}: {len(tempos_alvo)} de {total}"
+    )
+
+    ax.set_title(f"Time-to-Target — {instancia}")
+    ax.set_xlabel("Tempo decorrido (s)")
+    ax.set_ylabel("Execuções que atingiram o alvo (%)")
+    ax.set_ylim(-4, 104)
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.legend()
+
+    fig.tight_layout()
+    fig.savefig(f"ttt_{instancia}.png", dpi=200)
+    plt.close(fig)
+
 def main():
     instancia = "A-n32-k5"
     otimo, iteracoes, parada = 784, 10, 10
     tau = (3, 7)
 
-    resultados, melhor_historico = [], []
+    resultados, melhor_historico, medicoes_ttt = [], [], []
     menor_custo = None
 
     arquivo = f"Instancias_melhoria/{instancia}.vrp"
@@ -243,11 +306,13 @@ def main():
 
         tempo_melhor_s = None
         tempo_alvo_s = None
-        for _, custo_na_iteracao, tempo_s in historico:
+        for _, custo_na_iteracao, tempo_s, _ in historico:
             if tempo_melhor_s is None and custo_na_iteracao == custo:
                 tempo_melhor_s = tempo_s
             if tempo_alvo_s is None and custo_na_iteracao <= otimo:
                 tempo_alvo_s = tempo_s
+
+        medicoes_ttt.append((tempo_total_s, tempo_alvo_s))
 
         resultados.append([
             instancia, repeticao, semente, tau[0], tau[1], iteracoes, parada,
@@ -270,9 +335,11 @@ def main():
 
     salvar_csv(
         f"historico_{instancia}.csv",
-        ["iteracao", "melhor_custo", "tempo_s"],
+        ["iteracao", "melhor_custo", "tempo_s", "custo_atual"],
         melhor_historico[1:]
     )
+
+    gerar_graficos(instancia, otimo, melhor_historico, medicoes_ttt)
 
     return 
 
