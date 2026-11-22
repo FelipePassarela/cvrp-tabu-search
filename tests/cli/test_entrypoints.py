@@ -46,4 +46,5 @@ def test_entrypoint_exposes_the_cli(tmp_path: Path, command: list[str]) -> None:
     assert result.returncode == 0, result.stderr
     assert "baseline" in result.stdout
     assert "tabu-search" in result.stdout
+    assert "calibrate" in result.stdout
     assert list(tmp_path.iterdir()) == []

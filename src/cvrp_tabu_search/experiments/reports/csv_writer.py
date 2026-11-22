@@ -62,9 +62,20 @@ def _run_rows(
 
 
 def write_csv(
-    path: str | Path, header: Iterable[str], rows: Iterable[Iterable[CsvValue]]
+    path: str | Path,
+    header: Iterable[str],
+    rows: Iterable[Iterable[CsvValue]],
+    *,
+    flush_rows: bool = False,
 ) -> None:
     with open(path, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(header)
-        writer.writerows(rows)
+        if not flush_rows:
+            writer.writerows(rows)
+            return
+
+        file.flush()
+        for row in rows:
+            writer.writerow(row)
+            file.flush()

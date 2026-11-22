@@ -40,6 +40,22 @@ A CLI também pode ser executada com `uv run python -m cvrp_tabu_search`.
 
 Os resultados usam os prefixos `runs_`, `history_`, `convergence_` e `ttt_`. A variante com movimentos entre rotas inclui `tabu_` antes do nome da instância.
 
+### Calibração
+
+Na raiz do repositório, execute a grade do trabalho nas instâncias `A-n32-k5`, `A-n80-k10` e `B-n78-k10`.
+
+```sh
+uv run cvrp calibrate
+```
+
+O comando cruza três durações tabu mínimas (`1`, `3`, `6`) com três máximas (`7`, `11`, `15`). São 27 execuções com a mesma semente (`1`) e um orçamento de 180 segundos por execução, cerca de 81 minutos de busca no total. A tabela `results/<data-hora>/calibration.csv` é preenchida conforme as execuções terminam e registra a instância, os parâmetros, o tempo e o melhor custo obtido.
+
+Para testar outros níveis, passe três valores distintos em cada opção. O maior mínimo deve ser menor ou igual ao menor máximo. `--time-limit` permite um teste curto e `--output-dir` escolhe a pasta dos resultados. Se executar fora da raiz, passe o caminho da pasta com `A-n80-k10.vrp` e `B-n78-k10.vrp` via `--benchmarks-dir`.
+
+```sh
+uv run cvrp calibrate --tabu-tenure-min 2 4 6 --tabu-tenure-max 8 12 16 --time-limit 0.1 --output-dir results/piloto
+```
+
 ## Desenvolvimento
 
 O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).

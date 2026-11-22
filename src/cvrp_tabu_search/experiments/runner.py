@@ -65,6 +65,14 @@ def run_tabu_search_experiment(
     )
 
 
+def run_tabu_search_repetition(
+    instance: Instance, parameters: SearchParameters, *, seed: int
+) -> Run | None:
+    search = partial(tabu_search, demands=instance.demands)
+    run_search = _configure_search(instance, search, parameters)
+    return _run_repetition(instance, run_search, seed)
+
+
 def run_experiment(
     instance: Instance,
     search: SearchAlgorithm,
@@ -73,6 +81,20 @@ def run_experiment(
     report_prefix: str = "",
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> bool:
+    run_search = _configure_search(instance, search, parameters)
+    runs = _run_repetitions(instance, run_search)
+    if runs is None:
+        return False
+
+    generate_reports(
+        instance, parameters, runs, prefix=report_prefix, output_dir=output_dir
+    )
+    return True
+
+
+def _configure_search(
+    instance: Instance, search: SearchAlgorithm, parameters: SearchParameters
+) -> SearchRunner:
     if parameters.time_limit_s is not None:
         search = partial(search, time_limit_s=parameters.time_limit_s)
 
@@ -87,14 +109,7 @@ def run_experiment(
             start_time,
         )
 
-    runs = _run_repetitions(instance, run_search)
-    if runs is None:
-        return False
-
-    generate_reports(
-        instance, parameters, runs, prefix=report_prefix, output_dir=output_dir
-    )
-    return True
+    return run_search
 
 
 def _run_repetitions(instance: Instance, search: SearchRunner) -> list[Run] | None:
