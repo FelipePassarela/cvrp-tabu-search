@@ -18,7 +18,7 @@ from .directory import DEFAULT_OUTPUT_DIR, create_report_directory
 from .plots import TargetMeasurement, generate_plots
 
 if TYPE_CHECKING:
-    from ..runner import Run
+    from ..execution import Run
 
 __all__ = [
     "DEFAULT_OUTPUT_DIR",

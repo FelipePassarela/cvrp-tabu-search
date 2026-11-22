@@ -88,6 +88,9 @@ def test_subcommand_generates_reports_in_the_default_directory(
     assert {int(run["best_cost"]) for run in runs} == {expected_cost}
     assert {int(run["max_iterations"]) for run in runs} == {iteration_limit}
     assert {int(run["stagnation_limit"]) for run in runs} == {stagnation_limit}
+    assert {int(run["tabu_tenure_min"]) for run in runs} == {3}
+    assert {int(run["tabu_tenure_max"]) for run in runs} == {7}
+    assert {run["time_limit_s"] for run in runs} == {""}
 
     history = _read_csv(history_path)
     assert [int(row["iteration"]) for row in history] == list(
@@ -152,6 +155,10 @@ def test_cli_uses_custom_instance_target_and_search_limits(
         str(iterations),
         "--stagnation-limit",
         "2",
+        "--tabu-tenure-min",
+        "8",
+        "--tabu-tenure-max",
+        "8",
     ]
 
     result = CliRunner().invoke(app, arguments)
@@ -164,9 +171,39 @@ def test_cli_uses_custom_instance_target_and_search_limits(
     assert {run["best_cost"] for run in runs} == {str(expected_cost)}
     assert {run["max_iterations"] for run in runs} == {str(iterations)}
     assert {run["stagnation_limit"] for run in runs} == {"2"}
+    assert {run["tabu_tenure_min"] for run in runs} == {"8"}
+    assert {run["tabu_tenure_max"] for run in runs} == {"8"}
     history = _read_csv(report_directory / f"history_{prefix}{rectangle_path.stem}.csv")
     assert len(history) == iterations
     assert (runs[0]["time_to_target_s"] != "") is (expected_cost == 14)
+
+
+@pytest.mark.parametrize(
+    ("subcommand", "prefix"), [("baseline", ""), ("tabu-search", "tabu_")]
+)
+def test_cli_records_zero_time_budget_and_keeps_the_initial_solution(
+    working_directory: Path, rectangle_path: Path, subcommand: str, prefix: str
+) -> None:
+    arguments = [
+        subcommand,
+        "--instance",
+        str(rectangle_path),
+        "--target-cost",
+        "14",
+        "--time-limit",
+        "0",
+    ]
+
+    result = CliRunner().invoke(app, arguments)
+
+    assert result.exit_code == 0, result.output
+    report_directory = _single_timestamped_directory(working_directory / "results")
+    runs = _read_csv(report_directory / f"runs_{prefix}{rectangle_path.stem}.csv")
+    assert len(runs) == 5
+    assert {run["time_limit_s"] for run in runs} == {"0.0"}
+    assert {run["best_cost"] for run in runs} == {"18"}
+    history = _read_csv(report_directory / f"history_{prefix}{rectangle_path.stem}.csv")
+    assert history == []
 
 
 @pytest.mark.parametrize(
@@ -220,6 +257,9 @@ def test_subcommand_help_lists_the_available_options() -> None:
         "--target-cost",
         "--max-iterations",
         "--stagnation-limit",
+        "--time-limit",
+        "--tabu-tenure-min",
+        "--tabu-tenure-max",
         "--output-dir",
     ):
         assert option in result.output
@@ -246,6 +286,12 @@ def test_custom_instance_requires_a_reference_cost(
         (["--target-cost", "-1"], "--target-cost"),
         (["--max-iterations", "-1"], "--max-iterations"),
         (["--stagnation-limit", "0"], "--stagnation-limit"),
+        (["--time-limit=-0.5"], "--time-limit"),
+        (["--time-limit", "nan"], "--time-limit"),
+        (["--time-limit", "inf"], "--time-limit"),
+        (["--tabu-tenure-min", "-1"], "--tabu-tenure-min"),
+        (["--tabu-tenure-max", "-1"], "--tabu-tenure-max"),
+        (["--tabu-tenure-min", "8", "--tabu-tenure-max", "4"], "--tabu-tenure-max"),
         (["--instance", "missing.vrp", "--target-cost", "14"], "--instance"),
     ],
     ids=[
@@ -253,6 +299,12 @@ def test_custom_instance_requires_a_reference_cost(
         "negative-target",
         "negative-limit",
         "zero-stagnation",
+        "negative-time-limit",
+        "nan-time-limit",
+        "infinite-time-limit",
+        "negative-tenure-minimum",
+        "negative-tenure-maximum",
+        "reversed-tenure-bounds",
         "missing-file",
     ],
 )
