@@ -1,4 +1,6 @@
 import random
+import csv
+from time import perf_counter
 
 class Veiculo:
     def __init__(self, capacidade):
@@ -119,7 +121,7 @@ def melhor_vizinho(frota, custo_total, coordenadas, deposito, lista_tabu, iterac
 
     return movimento
 
-def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada):
+def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada, inicio_execucao):
     custo_atual, piora = 0, 0
     melhores_rotas = []
     lista_tabu = {}
@@ -129,6 +131,7 @@ def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada):
         melhores_rotas.append(veiculo.rota.copy())
 
     melhor_custo = custo_atual
+    historico = [(0, melhor_custo, perf_counter() - inicio_execucao)]
 
     for iteracao in range(1, iteracoes + 1):
         movimento = melhor_vizinho(frota, custo_atual, coordenadas, deposito, lista_tabu, iteracao, melhor_custo)
@@ -154,10 +157,13 @@ def busca_tabu(frota, coordenadas, deposito, tau, iteracoes, parada):
         else:
             piora += 1
 
+        tempo_s = perf_counter() - inicio_execucao
+        historico.append((iteracao, melhor_custo, tempo_s))
+
         if piora >= parada:
             break
 
-    return melhores_rotas, melhor_custo
+    return melhores_rotas, melhor_custo, historico
 
 def leitura(arquivo):
     secao = ""
@@ -202,22 +208,71 @@ def leitura(arquivo):
 
     return veiculos, dimensao, capacidade, coordenadas, demandas, deposito
 
+def salvar_csv(caminho, cabecalho, linhas):
+    with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
+        escritor = csv.writer(arquivo)
+        escritor.writerow(cabecalho)
+        escritor.writerows(linhas)
+
 def main():
-    arquivo = "Instacias_melhoria/A-n32-k5.vrp"
+    instancia = "A-n32-k5"
+    otimo, iteracoes, parada = 784, 10, 10
+    tau = (3, 7)
+
+    resultados, melhor_historico = [], []
+    menor_custo = None
+
+    arquivo = f"Instancias_melhoria/{instancia}.vrp"
     veiculos, dimensao, capacidade, coordenadas, demandas, deposito = leitura(arquivo)
 
-    frota = solucao_inicial(veiculos, dimensao, capacidade, demandas, deposito)
+    for repeticao in range(1, 6):
+        semente = repeticao
+        random.seed(semente)
 
-    if frota is None:
-        print("Impossivel montar a solucao inicial, deu algum b.o aqui")
-        return
+        inicio_execucao = perf_counter()
+        frota = solucao_inicial(veiculos, dimensao, capacidade, demandas, deposito)
 
-    melhores_rotas, melhor_custo = busca_tabu(frota, coordenadas, deposito, tau = (3, 7), iteracoes = 10, parada = 10)
+        if frota is None:
+            print("Impossivel montar a solucao inicial, deu algum b.o aqui")
+            return
+        
+        _, custo, historico = busca_tabu(
+            frota, coordenadas, deposito, tau, iteracoes, parada, inicio_execucao
+        )
+        tempo_total_s = perf_counter() - inicio_execucao
 
-    print("Melhor custo: ", melhor_custo)
+        tempo_melhor_s = None
+        tempo_alvo_s = None
+        for _, custo_na_iteracao, tempo_s in historico:
+            if tempo_melhor_s is None and custo_na_iteracao == custo:
+                tempo_melhor_s = tempo_s
+            if tempo_alvo_s is None and custo_na_iteracao <= otimo:
+                tempo_alvo_s = tempo_s
 
-    for numero, rota in enumerate(melhores_rotas, start = 1):
-        print(f"Veiculo {numero}: {rota}")
+        resultados.append([
+            instancia, repeticao, semente, tau[0], tau[1], iteracoes, parada,
+            otimo, custo, tempo_melhor_s, tempo_total_s, tempo_alvo_s
+        ])
+
+        if menor_custo is None or custo < menor_custo:
+            menor_custo = custo
+            melhor_historico = historico
+
+        print(f"Execução {repeticao}: custo {custo} | tempo {tempo_total_s:.3f} s")
+
+    salvar_csv(
+        f"execucoes_{instancia}.csv",
+        ["instancia", "repeticao", "semente", "tau_min", "tau_max",
+         "limite_iteracoes", "limite_sem_melhora", "otimo", "melhor_custo",
+         "tempo_melhor_s", "tempo_total_s", "tempo_alvo_s"],
+        resultados
+    )
+
+    salvar_csv(
+        f"historico_{instancia}.csv",
+        ["iteracao", "melhor_custo", "tempo_s"],
+        melhor_historico[1:]
+    )
 
     return 
 
