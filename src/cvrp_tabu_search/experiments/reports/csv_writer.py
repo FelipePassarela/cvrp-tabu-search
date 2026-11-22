@@ -24,6 +24,7 @@ RUN_HEADER = (
     "time_to_best_s",
     "total_time_s",
     "time_to_target_s",
+    "time_limit_s",
 )
 HISTORY_HEADER = ("iteration", "best_cost", "elapsed_time_s", "current_cost")
 
@@ -56,6 +57,7 @@ def _run_rows(
             run.time_to_best_s,
             run.total_time_s,
             run.time_to_target_s,
+            parameters.time_limit_s,
         ]
 
 

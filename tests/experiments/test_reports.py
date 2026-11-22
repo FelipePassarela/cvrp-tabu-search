@@ -26,7 +26,10 @@ def test_reports_use_the_first_cheapest_run_for_history_and_plots(
 ) -> None:
     instance = Instance("example", 18, 1, 2, 10, [[0, 0], [2, 0]], [0, 1], 1)
     parameters = SearchParameters(
-        max_iterations=20, stagnation_limit=5, tabu_tenure=TabuTenure(2, 4)
+        max_iterations=20,
+        stagnation_limit=5,
+        tabu_tenure=TabuTenure(2, 4),
+        time_limit_s=1.5,
     )
     initial_entry = SearchHistoryEntry(0, 30, 0.0, 30)
     tied_best_history = [initial_entry, SearchHistoryEntry(1, 18, 0.375, 18)]
@@ -69,9 +72,24 @@ def test_reports_use_the_first_cheapest_run_for_history_and_plots(
         "time_to_best_s",
         "total_time_s",
         "time_to_target_s",
+        "time_limit_s",
     ]
     assert run_rows[1:] == [
-        ["example", "1", "6", "2", "4", "20", "5", "18", "24", "0.25", "1.0", ""],
+        [
+            "example",
+            "1",
+            "6",
+            "2",
+            "4",
+            "20",
+            "5",
+            "18",
+            "24",
+            "0.25",
+            "1.0",
+            "",
+            "1.5",
+        ],
         [
             "example",
             "2",
@@ -85,8 +103,23 @@ def test_reports_use_the_first_cheapest_run_for_history_and_plots(
             "0.375",
             "0.75",
             "0.375",
+            "1.5",
         ],
-        ["example", "3", "8", "2", "4", "20", "5", "18", "18", "0.125", "0.5", "0.125"],
+        [
+            "example",
+            "3",
+            "8",
+            "2",
+            "4",
+            "20",
+            "5",
+            "18",
+            "18",
+            "0.125",
+            "0.5",
+            "0.125",
+            "1.5",
+        ],
     ]
     draw_plots.assert_called_once_with(
         "example",

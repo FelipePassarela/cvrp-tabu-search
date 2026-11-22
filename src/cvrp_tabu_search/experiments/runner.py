@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from time import perf_counter
+from typing import Protocol
 
 from ..instances import Instance
 from ..routes import Coordinates, Vehicle, build_initial_solution
@@ -14,10 +15,23 @@ from .reports import DEFAULT_OUTPUT_DIR, generate_reports
 
 REPETITIONS = 5
 
-type SearchAlgorithm = Callable[
-    [list[Vehicle], Coordinates, int, tuple[int, int], int, int, float], SearchResult
-]
 type SearchRunner = Callable[[list[Vehicle], float], SearchResult]
+
+
+class SearchAlgorithm(Protocol):
+    def __call__(
+        self,
+        fleet: list[Vehicle],
+        coordinates: Coordinates,
+        depot: int,
+        tabu_tenure: tuple[int, int],
+        max_iterations: int,
+        stagnation_limit: int,
+        start_time: float,
+        /,
+        *,
+        time_limit_s: float | None = None,
+    ) -> SearchResult: ...
 
 
 @dataclass(frozen=True)
@@ -59,6 +73,9 @@ def run_experiment(
     report_prefix: str = "",
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> bool:
+    if parameters.time_limit_s is not None:
+        search = partial(search, time_limit_s=parameters.time_limit_s)
+
     def run_search(fleet: list[Vehicle], start_time: float) -> SearchResult:
         return search(
             fleet,

@@ -56,6 +56,7 @@ class SearchParameters:
     max_iterations: int
     stagnation_limit: int
     tabu_tenure: TabuTenure = DEFAULT_TABU_TENURE
+    time_limit_s: float | None = None
 
 
 class SearchProgress:
@@ -74,6 +75,9 @@ class SearchProgress:
         self.history: SearchHistory = []
         self._start_time = start_time
         self._record_cost(0, self.best_cost)
+
+    def time_limit_reached(self, time_limit_s: float | None) -> bool:
+        return time_limit_s is not None and self._elapsed_time_s() >= time_limit_s
 
     def record_iteration(
         self, iteration: int, fleet: Iterable[Vehicle], current_cost: int
@@ -95,15 +99,17 @@ class SearchProgress:
         )
 
     def _record_cost(self, iteration: int, current_cost: int) -> None:
-        elapsed_time = perf_counter() - self._start_time
         self.history.append(
             SearchHistoryEntry(
                 iteration=iteration,
                 best_cost=self.best_cost,
-                elapsed_time_s=elapsed_time,
+                elapsed_time_s=self._elapsed_time_s(),
                 current_cost=current_cost,
             )
         )
+
+    def _elapsed_time_s(self) -> float:
+        return perf_counter() - self._start_time
 
 
 def evaluate_reversals(

@@ -80,7 +80,7 @@ def test_experiment_seeds_each_search_reproducibly(
     monkeypatch.setattr(runner, "generate_reports", Mock())
     samples: list[float] = []
 
-    def observe_sample(*_arguments: object) -> SearchResult:
+    def observe_sample(*_arguments: object, **_options: object) -> SearchResult:
         samples.append(generator.random())
         return SearchResult(
             best_routes=[[2, 3, 4]],
