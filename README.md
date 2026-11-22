@@ -25,9 +25,10 @@ Os resultados usam os prefixos `runs_`, `history_`, `convergence_` e `ttt_`. A v
 
 ## Desenvolvimento
 
-Use Ruff para lint e formatação e ty para checagem de tipos.
+Execute os testes com pytest. Use Ruff para lint e formatação e ty para checagem de tipos.
 
 ```sh
+uv run pytest
 uv run ruff check
 uv run ruff format --check
 uv run ty check
