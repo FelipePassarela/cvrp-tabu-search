@@ -77,7 +77,7 @@ uv run cvrp report final resultados/finais --output-dir artigo/tabelas
 uv run cvrp report calibration resultados/calibracao/calibration.csv --output-dir artigo/tabelas
 uv run cvrp report convergence resultados/finais/<pasta>/history_tabu_B-n50-k7.csv --optimal-cost 741 --output artigo/figuras/convergencia.png
 uv run cvrp report ablation resultados/ablacao --output-dir artigo/tabelas
-uv run cvrp plot-solution --target-cost 784 --tabu-tenure-min 1 --tabu-tenure-max 11 --output-dir artigo/figuras
+uv run cvrp plot-solution --instance src/cvrp_tabu_search/data/A-n32-k5.vrp --target-cost 784 --tabu-tenure-min 1 --tabu-tenure-max 11 --output-dir artigo/figuras
 ```
 
 Toda pasta de resultados inclui `environment.json` (Python, sistema, processador, memória e commit) e `solution_*.json`, com as rotas da melhor execução conferidas por um verificador independente.
