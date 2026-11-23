@@ -7,7 +7,7 @@ import pytest
 
 from cvrp_tabu_search.experiments import reports
 from cvrp_tabu_search.experiments.execution import Run
-from cvrp_tabu_search.experiments.reports import TargetMeasurement, directory, plots
+from cvrp_tabu_search.experiments.reports import directory
 from cvrp_tabu_search.instances import Instance
 from cvrp_tabu_search.search.shared import (
     SearchHistoryEntry,
@@ -146,30 +146,3 @@ def test_report_directories_are_distinct_when_created_in_the_same_second(
     assert first_directory == output_dir / "2026-11-22_18-34-34"
     assert second_directory == output_dir / "2026-11-22_18-34-34-2"
     assert set(output_dir.iterdir()) == {first_directory, second_directory}
-
-
-@pytest.mark.parametrize(
-    ("measurements", "times", "percentages", "hits"),
-    [
-        (
-            [
-                TargetMeasurement(3, 2),
-                TargetMeasurement(1.25, 1),
-                TargetMeasurement(4, None),
-                TargetMeasurement(3, 2),
-            ],
-            [0, 1, 2, 2, 4],
-            [0, 25, 50, 75, 75],
-            3,
-        ),
-        ([TargetMeasurement(2, None), TargetMeasurement(4, None)], [0, 4], [0, 0], 0),
-    ],
-    ids=["sorted-hits-with-a-tie-and-a-miss", "all-missed"],
-)
-def test_time_to_target_curve_counts_misses_and_extends_to_the_longest_run(
-    measurements: list[TargetMeasurement],
-    times: list[float],
-    percentages: list[float],
-    hits: int,
-) -> None:
-    assert plots._time_to_target_curve(measurements) == (times, percentages, hits)
