@@ -62,6 +62,26 @@ Para testar outros níveis, passe três valores distintos em cada opção. O mai
 uv run cvrp calibrate --tabu-tenure-min 2 4 6 --tabu-tenure-max 8 12 16 --time-limit 0.1 --output-dir results/piloto
 ```
 
+### Time-to-target
+
+`cvrp ttt` executa `--runs` buscas independentes (sementes 1, 2, …). Cada uma para assim que encontra uma solução de custo menor ou igual ao ótimo informado em `--target-cost`, ou quando atinge `--time-limit` (180 s por padrão). Não há limite de iterações. O gráfico segue Aiex et al. (2007): o ponto i tem coordenadas (tᵢ, (i − ½)/n), com n igual ao total de execuções.
+
+```sh
+uv run cvrp ttt --instance benchmarks/general/B-n50-k7.vrp --target-cost 741 --runs 50 --time-limit 180 --tabu-tenure-min 1 --tabu-tenure-max 15 --jobs 4
+```
+
+### Tabelas e figuras do artigo
+
+```sh
+uv run cvrp report final resultados/finais --output-dir artigo/tabelas
+uv run cvrp report calibration resultados/calibracao/calibration.csv --output-dir artigo/tabelas
+uv run cvrp report convergence resultados/finais/<pasta>/history_tabu_B-n50-k7.csv --optimal-cost 741 --output artigo/figuras/convergencia.png
+uv run cvrp report ablation resultados/ablacao --output-dir artigo/tabelas
+uv run cvrp plot-solution --instance src/cvrp_tabu_search/data/A-n32-k5.vrp --target-cost 784 --tabu-tenure-min 1 --tabu-tenure-max 11 --output-dir artigo/figuras
+```
+
+Toda pasta de resultados inclui `environment.json` (Python, sistema, processador, memória e commit) e `solution_*.json`, com as rotas da melhor execução conferidas por um verificador independente.
+
 ## Desenvolvimento
 
 O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).

@@ -57,6 +57,7 @@ class SearchParameters:
     stagnation_limit: int
     tabu_tenure: TabuTenure = DEFAULT_TABU_TENURE
     time_limit_s: float | None = None
+    stop_at_target: bool = False
 
 
 class SearchProgress:
@@ -78,6 +79,9 @@ class SearchProgress:
 
     def time_limit_reached(self, time_limit_s: float | None) -> bool:
         return time_limit_s is not None and self._elapsed_time_s() >= time_limit_s
+
+    def target_reached(self, target_cost: int | None) -> bool:
+        return target_cost is not None and self.best_cost <= target_cost
 
     def record_iteration(
         self, iteration: int, fleet: Iterable[Vehicle], current_cost: int

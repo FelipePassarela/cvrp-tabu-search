@@ -1,6 +1,7 @@
 from itertools import product
 from math import isfinite
 from pathlib import Path
+from sys import maxsize
 from typing import Annotated
 
 import typer
@@ -11,12 +12,19 @@ from .experiments.calibration import (
     load_calibration_instances,
     run_calibration,
 )
+from .experiments.execution import run_once, tabu_search_for
 from .experiments.reports import DEFAULT_OUTPUT_DIR
+from .experiments.reports.directory import create_report_directory
+from .experiments.reports.environment import write_environment
+from .experiments.reports.solution import plot_solution, write_solution_json
 from .experiments.runner import run_baseline_experiment, run_tabu_search_experiment
+from .experiments.ttt import TttError, run_time_to_target
 from .instances import Instance, load_default_instance, load_instance
+from .report_cli import report_app
 from .search.shared import DEFAULT_TABU_TENURE, SearchParameters, TabuTenure
 
 app = typer.Typer(help="Run the CVRP tabu search experiments.", no_args_is_help=True)
+app.add_typer(report_app, name="report")
 
 
 def _validate_time_limit(value: float | None) -> float | None:
@@ -91,6 +99,10 @@ CalibrationMaximums = Annotated[
 CalibrationJobs = Annotated[
     int, typer.Option(min=1, help="Maximum number of calibration runs in parallel.")
 ]
+RunCount = Annotated[
+    int, typer.Option(min=1, help="Number of independent runs (seeds 1..runs).")
+]
+Seed = Annotated[int, typer.Option(min=0, help="Random seed of the run.")]
 
 
 @app.command("baseline")
@@ -124,6 +136,13 @@ def tabu_search_command(
     tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
     tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
     time_limit: TimeLimit = None,
+    phases: Annotated[
+        bool,
+        typer.Option(
+            "--phases/--no-phases",
+            help="Use intensification and diversification (disable for ablation).",
+        ),
+    ] = True,
 ) -> None:
     """Run the search with inter-route moves, intensification and diversification."""
     tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
@@ -131,7 +150,9 @@ def tabu_search_command(
     parameters = SearchParameters(
         max_iterations, stagnation_limit, tabu_tenure=tenure, time_limit_s=time_limit
     )
-    if not run_tabu_search_experiment(problem, parameters, output_dir=output_dir):
+    if not run_tabu_search_experiment(
+        problem, parameters, output_dir=output_dir, use_phases=phases
+    ):
         raise typer.Exit(code=1)
 
 
@@ -162,6 +183,71 @@ def calibrate_command(
     except (CalibrationError, OSError) as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=1) from error
+
+
+@app.command("ttt")
+def ttt_command(
+    instance: InstancePath = None,
+    target_cost: TargetCost = None,
+    runs: RunCount = 50,
+    time_limit: CalibrationTimeLimit = CALIBRATION_TIME_LIMIT_S,
+    tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
+    tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
+    jobs: CalibrationJobs = 1,
+    output_dir: OutputDirectory = DEFAULT_OUTPUT_DIR,
+) -> None:
+    """Run time-to-target trials that stop at the known optimum (Aiex et al., 2007)."""
+    tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
+    problem = _resolve_instance(instance, target_cost)
+    try:
+        directory = run_time_to_target(
+            problem,
+            tenure,
+            runs=runs,
+            time_limit_s=time_limit,
+            output_dir=output_dir,
+            jobs=jobs,
+        )
+    except (TttError, OSError) as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(code=1) from error
+    typer.echo(f"Time-to-target report: {directory}")
+
+
+@app.command("plot-solution")
+def plot_solution_command(
+    instance: InstancePath = None,
+    target_cost: TargetCost = None,
+    seed: Seed = 1,
+    time_limit: CalibrationTimeLimit = 60.0,
+    tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
+    tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
+    output_dir: OutputDirectory = DEFAULT_OUTPUT_DIR,
+) -> None:
+    """Solve once until the known optimum or the time limit, then validate and draw."""
+    tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
+    problem = _resolve_instance(instance, target_cost)
+    parameters = SearchParameters(
+        max_iterations=maxsize,
+        stagnation_limit=maxsize,
+        tabu_tenure=tenure,
+        time_limit_s=time_limit,
+        stop_at_target=True,
+    )
+    run = run_once(problem, tabu_search_for(problem), parameters, seed=seed)
+    if run is None:
+        typer.echo("Could not build a feasible initial solution.", err=True)
+        raise typer.Exit(code=1)
+
+    directory = create_report_directory(output_dir)
+    write_environment(directory)
+    check = write_solution_json(
+        directory / f"solution_{problem.name}.json", problem, run.routes
+    )
+    plot_solution(problem, run.routes, directory / f"solution_{problem.name}.png")
+    typer.echo(f"Cost {check.cost} | feasible: {check.feasible} | {directory}")
+    if not check.feasible:
+        raise typer.Exit(code=1)
 
 
 def _resolve_calibration_tenures(

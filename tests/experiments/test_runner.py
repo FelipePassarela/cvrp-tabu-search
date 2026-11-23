@@ -66,6 +66,7 @@ def test_experiment_rebuilds_the_initial_fleet_before_every_run(
             total_time_s=3,
             time_to_best_s=2,
             time_to_target_s=2,
+            routes=[[2, 4, 3]],
         )
         for seed in range(1, 6)
     ]

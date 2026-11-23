@@ -1,4 +1,5 @@
 import csv
+import json
 import random
 from collections.abc import Iterator
 from datetime import datetime
@@ -37,6 +38,18 @@ def working_directory(
             yield workspace
     finally:
         random.setstate(random_state)
+
+
+def test_tabu_search_without_phases_uses_its_own_report_prefix(
+    working_directory: Path,
+) -> None:
+    result = CliRunner().invoke(
+        app, ["tabu-search", "--no-phases", "--max-iterations", "5"]
+    )
+
+    assert result.exit_code == 0, result.output
+    report_directory = _single_timestamped_directory(working_directory / "results")
+    assert (report_directory / "runs_tabu_nophases_A-n32-k5.csv").is_file()
 
 
 @pytest.mark.parametrize(
@@ -79,7 +92,14 @@ def test_subcommand_generates_reports_in_the_default_directory(
         report_directory / f"{kind}_{suffix}.png" for kind in ("convergence", "ttt")
     ]
     assert list(working_directory.iterdir()) == [output_dir]
-    assert set(report_directory.iterdir()) == {runs_path, history_path, *plots}
+    environment_path = report_directory / "environment.json"
+    assert set(report_directory.iterdir()) == {
+        runs_path,
+        history_path,
+        environment_path,
+        report_directory / f"solution_{suffix}.json",
+        *plots,
+    }
     for plot in plots:
         assert plot.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"), plot
 
@@ -91,6 +111,12 @@ def test_subcommand_generates_reports_in_the_default_directory(
     assert {int(run["tabu_tenure_min"]) for run in runs} == {3}
     assert {int(run["tabu_tenure_max"]) for run in runs} == {7}
     assert {run["time_limit_s"] for run in runs} == {""}
+
+    solution = json.loads(
+        (report_directory / f"solution_{suffix}.json").read_text(encoding="utf-8")
+    )
+    assert solution["feasible"] is True
+    assert solution["cost"] == expected_cost
 
     history = _read_csv(history_path)
     assert [int(row["iteration"]) for row in history] == list(
@@ -230,6 +256,8 @@ def test_subcommand_saves_all_reports_in_the_requested_directory(
         f"history_{suffix}.csv",
         f"convergence_{suffix}.png",
         f"ttt_{suffix}.png",
+        "environment.json",
+        f"solution_{suffix}.json",
     }
     assert list(working_directory.iterdir()) == [output_dir.parent]
 

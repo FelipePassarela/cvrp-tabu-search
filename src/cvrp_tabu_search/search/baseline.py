@@ -65,13 +65,16 @@ def tabu_search(
     start_time: float,
     *,
     time_limit_s: float | None = None,
+    target_cost: int | None = None,
 ) -> SearchResult:
     progress = SearchProgress(fleet, coordinates, depot, start_time)
     current_cost = progress.best_cost
     tabu_list: dict[tuple[int, int], int] = {}
 
     for iteration in range(1, max_iterations + 1):
-        if progress.time_limit_reached(time_limit_s):
+        if progress.time_limit_reached(time_limit_s) or progress.target_reached(
+            target_cost
+        ):
             break
 
         move = find_best_neighbor(
