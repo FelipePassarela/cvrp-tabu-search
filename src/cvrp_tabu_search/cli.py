@@ -20,9 +20,11 @@ from .experiments.reports.solution import plot_solution, write_solution_json
 from .experiments.runner import run_baseline_experiment, run_tabu_search_experiment
 from .experiments.ttt import TttError, run_time_to_target
 from .instances import Instance, load_default_instance, load_instance
+from .report_cli import report_app
 from .search.shared import DEFAULT_TABU_TENURE, SearchParameters, TabuTenure
 
 app = typer.Typer(help="Run the CVRP tabu search experiments.", no_args_is_help=True)
+app.add_typer(report_app, name="report")
 
 
 def _validate_time_limit(value: float | None) -> float | None:

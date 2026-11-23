@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from ...search.shared import SearchHistory, SearchHistoryEntry
+from ..summary import InstanceSummary, gap
 from .directory import DEFAULT_OUTPUT_DIR, create_report_directory
 
 
@@ -109,3 +110,34 @@ def save_figure(figure: Figure, path: Path) -> None:
         figure.savefig(path, dpi=200)
     finally:
         plt.close(figure)
+
+
+_GROUP_STYLE = {
+    "A": ("o", "tab:blue"),
+    "B": ("s", "tab:orange"),
+    "F": ("^", "tab:green"),
+}
+
+
+def plot_gap_by_size(summaries: Sequence[InstanceSummary], path: Path) -> None:
+    figure, axes = plt.subplots(figsize=(7, 4))
+    for group in sorted({summary.group for summary in summaries}):
+        members = [summary for summary in summaries if summary.group == group]
+        marker, color = _GROUP_STYLE.get(group, ("o", "tab:gray"))
+        sizes = [summary.customers for summary in members]
+        worst = [max(gap(cost, s.optimal_cost) for cost in s.costs) for s in members]
+        axes.vlines(sizes, [s.gap_best for s in members], worst, color=color, alpha=0.4)
+        axes.scatter(
+            sizes,
+            [s.gap_mean for s in members],
+            marker=marker,
+            color=color,
+            label=f"Conjunto {group}",
+            zorder=3,
+        )
+    axes.axhline(0, color="0.5", linewidth=0.8)
+    axes.set_xlabel("Número de clientes")
+    axes.set_ylabel("Gap em relação ao ótimo (%)")
+    axes.grid(alpha=0.3)
+    axes.legend()
+    save_figure(figure, path)
