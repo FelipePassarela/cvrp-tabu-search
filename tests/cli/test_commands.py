@@ -1,4 +1,5 @@
 import csv
+import json
 import random
 from collections.abc import Iterator
 from datetime import datetime
@@ -96,6 +97,7 @@ def test_subcommand_generates_reports_in_the_default_directory(
         runs_path,
         history_path,
         environment_path,
+        report_directory / f"solution_{suffix}.json",
         *plots,
     }
     for plot in plots:
@@ -109,6 +111,12 @@ def test_subcommand_generates_reports_in_the_default_directory(
     assert {int(run["tabu_tenure_min"]) for run in runs} == {3}
     assert {int(run["tabu_tenure_max"]) for run in runs} == {7}
     assert {run["time_limit_s"] for run in runs} == {""}
+
+    solution = json.loads(
+        (report_directory / f"solution_{suffix}.json").read_text(encoding="utf-8")
+    )
+    assert solution["feasible"] is True
+    assert solution["cost"] == expected_cost
 
     history = _read_csv(history_path)
     assert [int(row["iteration"]) for row in history] == list(
@@ -249,6 +257,7 @@ def test_subcommand_saves_all_reports_in_the_requested_directory(
         f"convergence_{suffix}.png",
         f"ttt_{suffix}.png",
         "environment.json",
+        f"solution_{suffix}.json",
     }
     assert list(working_directory.iterdir()) == [output_dir.parent]
 

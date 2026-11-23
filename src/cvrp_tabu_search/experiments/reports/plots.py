@@ -58,7 +58,7 @@ def _plot_convergence(
     axes.set_ylabel("Total cost")
     axes.legend()
 
-    _save_figure(figure, path)
+    save_figure(figure, path)
 
 
 def _plot_time_to_target(
@@ -85,10 +85,10 @@ def _plot_time_to_target(
     axes.set_yticks([0, 25, 50, 75, 100])
     axes.legend()
 
-    _save_figure(figure, path)
+    save_figure(figure, path)
 
 
-def _save_figure(figure: Figure, path: Path) -> None:
+def save_figure(figure: Figure, path: Path) -> None:
     try:
         figure.tight_layout()
         figure.savefig(path, dpi=200)

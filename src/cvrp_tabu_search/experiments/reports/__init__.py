@@ -17,6 +17,7 @@ from .csv_writer import (
 from .directory import DEFAULT_OUTPUT_DIR, create_report_directory
 from .environment import write_environment
 from .plots import TargetMeasurement, generate_plots
+from .solution import write_solution_json
 
 if TYPE_CHECKING:
     from ..execution import Run
@@ -50,6 +51,11 @@ def generate_reports(
     write_runs_csv(runs_path, instance, parameters, runs)
 
     best_run = min(runs, key=lambda run: run.cost)
+    check = write_solution_json(
+        report_directory / f"solution_{name}.json", instance, best_run.routes
+    )
+    if best_run.routes and not check.feasible:
+        print(f"Warning: infeasible best solution: {'; '.join(check.problems)}")
     best_history = best_run.history
     write_history_csv(history_path, best_history)
 
