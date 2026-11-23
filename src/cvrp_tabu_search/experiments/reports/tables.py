@@ -59,9 +59,24 @@ def write_final_table(summaries: Sequence[InstanceSummary], output_dir: Path) ->
     (output_dir / "final_table.tex").write_text(
         final_table_latex(summaries), encoding="utf-8"
     )
+    # Two halves (first set | remaining sets) to typeset side by side.
+    first = [s for s in summaries if s.group == summaries[0].group]
+    rest = [s for s in summaries if s.group != summaries[0].group]
+    (output_dir / "final_table_part1.tex").write_text(
+        final_table_latex(first, overall=()), encoding="utf-8"
+    )
+    (output_dir / "final_table_part2.tex").write_text(
+        final_table_latex(rest, overall=summaries), encoding="utf-8"
+    )
 
 
-def final_table_latex(summaries: Sequence[InstanceSummary]) -> str:
+def final_table_latex(
+    summaries: Sequence[InstanceSummary],
+    overall: Sequence[InstanceSummary] | None = None,
+) -> str:
+    """Build the assignment table; ``overall`` feeds the last line (empty: omit)."""
+    if overall is None:
+        overall = summaries
     lines = [
         r"\begin{tabular}{lrrrrrrr}",
         r"\toprule",
@@ -89,7 +104,8 @@ def final_table_latex(summaries: Sequence[InstanceSummary]) -> str:
             )
         lines.append(_average_line(f"Média {group}", members))
 
-    lines += [r"\midrule", _average_line("Média geral", summaries)]
+    if overall:
+        lines += [r"\midrule", _average_line("Média geral", overall)]
     lines += [r"\bottomrule", r"\end{tabular}", ""]
     return "\n".join(lines)
 

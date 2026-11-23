@@ -66,6 +66,10 @@ def test_final_report_writes_the_assignment_table(
     table = (output / "final_table.tex").read_text(encoding="utf-8")
     assert r"A-n32-k5 & 784 & 784 & 790,0 & 12,0 & 11,0 & 0,00 & 0,77 \\" in table
     assert r"\textit{Média geral}" in table
+    first = (output / "final_table_part1.tex").read_text(encoding="utf-8")
+    second = (output / "final_table_part2.tex").read_text(encoding="utf-8")
+    assert "A-n32-k5" in first and "Média geral" not in first
+    assert "B-n31-k5" in second and r"\textit{Média geral}" in second
     with (output / "final_table.csv").open(encoding="utf-8", newline="") as file:
         rows = list(csv.DictReader(file))
     assert [row["instance"] for row in rows] == ["A-n32-k5", "B-n31-k5"]
