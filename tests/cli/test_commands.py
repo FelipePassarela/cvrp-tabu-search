@@ -79,7 +79,13 @@ def test_subcommand_generates_reports_in_the_default_directory(
         report_directory / f"{kind}_{suffix}.png" for kind in ("convergence", "ttt")
     ]
     assert list(working_directory.iterdir()) == [output_dir]
-    assert set(report_directory.iterdir()) == {runs_path, history_path, *plots}
+    environment_path = report_directory / "environment.json"
+    assert set(report_directory.iterdir()) == {
+        runs_path,
+        history_path,
+        environment_path,
+        *plots,
+    }
     for plot in plots:
         assert plot.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"), plot
 
@@ -230,6 +236,7 @@ def test_subcommand_saves_all_reports_in_the_requested_directory(
         f"history_{suffix}.csv",
         f"convergence_{suffix}.png",
         f"ttt_{suffix}.png",
+        "environment.json",
     }
     assert list(working_directory.iterdir()) == [output_dir.parent]
 

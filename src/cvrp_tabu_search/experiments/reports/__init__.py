@@ -15,6 +15,7 @@ from .csv_writer import (
     write_runs_csv,
 )
 from .directory import DEFAULT_OUTPUT_DIR, create_report_directory
+from .environment import write_environment
 from .plots import TargetMeasurement, generate_plots
 
 if TYPE_CHECKING:
@@ -41,6 +42,7 @@ def generate_reports(
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> None:
     report_directory = create_report_directory(output_dir)
+    write_environment(report_directory)
 
     name = f"{prefix}{instance.name}"
     runs_path = report_directory / f"runs_{name}.csv"

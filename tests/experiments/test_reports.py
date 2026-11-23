@@ -54,6 +54,7 @@ def test_reports_use_the_first_cheapest_run_for_history_and_plots(
     reports.generate_reports(instance, parameters, runs, prefix="test_")
 
     [run_directory] = (tmp_path / "results").iterdir()
+    assert (run_directory / "environment.json").is_file()
     assert _read_csv(run_directory / "history_test_example.csv") == [
         ["iteration", "best_cost", "elapsed_time_s", "current_cost"],
         ["1", "18", "0.375", "18"],
