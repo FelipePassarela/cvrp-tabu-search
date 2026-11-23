@@ -23,10 +23,12 @@ def run_tabu_search_experiment(
     parameters: SearchParameters,
     *,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
+    use_phases: bool = True,
 ) -> bool:
-    search = tabu_search_for(instance)
+    search = tabu_search_for(instance, use_phases=use_phases)
+    prefix = "tabu_" if use_phases else "tabu_nophases_"
     return run_experiment(
-        instance, search, parameters, report_prefix="tabu_", output_dir=output_dir
+        instance, search, parameters, report_prefix=prefix, output_dir=output_dir
     )
 
 

@@ -39,6 +39,18 @@ def working_directory(
         random.setstate(random_state)
 
 
+def test_tabu_search_without_phases_uses_its_own_report_prefix(
+    working_directory: Path,
+) -> None:
+    result = CliRunner().invoke(
+        app, ["tabu-search", "--no-phases", "--max-iterations", "5"]
+    )
+
+    assert result.exit_code == 0, result.output
+    report_directory = _single_timestamped_directory(working_directory / "results")
+    assert (report_directory / "runs_tabu_nophases_A-n32-k5.csv").is_file()
+
+
 @pytest.mark.parametrize(
     (
         "subcommand",

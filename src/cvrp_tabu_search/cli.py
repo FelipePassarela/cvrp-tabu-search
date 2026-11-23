@@ -124,6 +124,13 @@ def tabu_search_command(
     tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
     tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
     time_limit: TimeLimit = None,
+    phases: Annotated[
+        bool,
+        typer.Option(
+            "--phases/--no-phases",
+            help="Use intensification and diversification (disable for ablation).",
+        ),
+    ] = True,
 ) -> None:
     """Run the search with inter-route moves, intensification and diversification."""
     tenure = _resolve_tabu_tenure(tabu_tenure_min, tabu_tenure_max)
@@ -131,7 +138,9 @@ def tabu_search_command(
     parameters = SearchParameters(
         max_iterations, stagnation_limit, tabu_tenure=tenure, time_limit_s=time_limit
     )
-    if not run_tabu_search_experiment(problem, parameters, output_dir=output_dir):
+    if not run_tabu_search_experiment(
+        problem, parameters, output_dir=output_dir, use_phases=phases
+    ):
         raise typer.Exit(code=1)
 
 
