@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from dataclasses import field
 
 from pydantic.dataclasses import dataclass as validated_dataclass
@@ -49,3 +50,9 @@ class Route:
     @property
     def total_demand(self) -> int:
         return sum(client.demand for client in self.clients)
+
+    def __len__(self) -> int:
+        return len(self.clients)
+
+    def __iter__(self) -> Iterator[Client]:
+        return iter(self.clients)

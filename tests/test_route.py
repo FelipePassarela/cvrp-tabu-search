@@ -13,7 +13,17 @@ def test_route_preserves_the_order_of_client_visits() -> None:
 
     route = Route(clients=clients)
 
-    assert [client.id for client in route.clients] == [7, 12, 3]
+    assert [client.id for client in route] == [7, 12, 3]
+
+
+def test_route_length_counts_its_clients() -> None:
+    route = Route()
+    assert len(route) == 0
+
+    client = Client(id=7, demand=5, coord_x=2, coord_y=3)
+    route.insert_client(0, client)
+
+    assert len(route) == 1
 
 
 def test_each_empty_route_has_its_own_client_list() -> None:
