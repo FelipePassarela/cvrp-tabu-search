@@ -1,74 +1,70 @@
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 from pathlib import Path
 
+import typer
+from pydantic import ValidationError
+
+from cvrp_tabu_search.cli_args import (
+    DEFAULT_INSTANCE_PATH,
+    InstancePath,
+    IterationLimit,
+    RandomSeed,
+    StagnationLimit,
+    TabuTenureMaximum,
+    TabuTenureMinimum,
+)
+from cvrp_tabu_search.search.instance import Instance
 from cvrp_tabu_search.search.instance_factory import load_instance
 from cvrp_tabu_search.search.stop_criteria import IterationStop, StagnationStop
 from cvrp_tabu_search.search.tabu_search import SearchResult, TabuSearch
 from cvrp_tabu_search.search.tabu_tenure import DEFAULT_TABU_TENURE, TabuTenure
 
-_DEFAULT_PATH = Path(__file__).with_name("data") / "A-n32-k5.vrp"
+app = typer.Typer(add_completion=False)
 
 
-def app() -> None:
-    parser = _build_parser()
-    arguments = parser.parse_args()
+@app.command()
+def run(
+    path: InstancePath = DEFAULT_INSTANCE_PATH,
+    max_iterations: IterationLimit = 60,
+    stagnation_limit: StagnationLimit = 30,
+    tabu_tenure_min: TabuTenureMinimum = DEFAULT_TABU_TENURE.minimum,
+    tabu_tenure_max: TabuTenureMaximum = DEFAULT_TABU_TENURE.maximum,
+    seed: RandomSeed = None,
+) -> None:
+    """Run tabu search on a CVRP instance."""
+    search = _build_search(
+        max_iterations, stagnation_limit, tabu_tenure_min, tabu_tenure_max
+    )
+    instance = _read_instance(path)
+    result = search.solve(instance, seed=seed)
 
-    try:
-        search = _build_search(arguments)
-        instance = load_instance(arguments.path)
-    except (OSError, ValueError) as error:
-        parser.error(str(error))
-
-    result = search.solve(instance, seed=arguments.seed)
     if result is None:
-        parser.exit(
-            1, "First Fit Decreasing could not construct an initial solution.\n"
+        typer.echo(
+            "First Fit Decreasing could not construct an initial solution.", err=True
         )
+        raise typer.Exit(code=1)
 
     _print_result(result)
 
 
-def _build_parser() -> ArgumentParser:
-    parser = ArgumentParser(
-        description="Run tabu search on a CVRP instance.",
-        formatter_class=ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument(
-        "path", nargs="?", type=Path, default=_DEFAULT_PATH, help="CVRP instance file."
-    )
-    parser.add_argument(
-        "--max-iterations", type=int, default=60, help="Maximum number of iterations."
-    )
-    parser.add_argument(
-        "--stagnation-limit",
-        type=int,
-        default=30,
-        help="Maximum number of consecutive iterations without improvement.",
-    )
-    parser.add_argument(
-        "--tabu-tenure-min",
-        type=int,
-        default=DEFAULT_TABU_TENURE.minimum,
-        help="Minimum tabu duration in iterations.",
-    )
-    parser.add_argument(
-        "--tabu-tenure-max",
-        type=int,
-        default=DEFAULT_TABU_TENURE.maximum,
-        help="Maximum tabu duration in iterations.",
-    )
-    parser.add_argument(
-        "--seed", type=int, help="Seed for reproducing tabu tenure draws."
-    )
-    return parser
+def _read_instance(path: Path) -> Instance:
+    try:
+        return load_instance(path)
+    except (OSError, ValueError) as error:
+        raise typer.BadParameter(str(error), param_hint="PATH") from error
 
 
-def _build_search(arguments: Namespace) -> TabuSearch:
-    iteration_stop = IterationStop(max_iterations=arguments.max_iterations)
-    stagnation_stop = StagnationStop(stagnation_limit=arguments.stagnation_limit)
-    tenure = TabuTenure(
-        minimum=arguments.tabu_tenure_min, maximum=arguments.tabu_tenure_max
-    )
+def _build_search(
+    max_iterations: int, stagnation_limit: int, tenure_minimum: int, tenure_maximum: int
+) -> TabuSearch:
+    iteration_stop = IterationStop(max_iterations=max_iterations)
+    stagnation_stop = StagnationStop(stagnation_limit=stagnation_limit)
+    try:
+        tenure = TabuTenure(minimum=tenure_minimum, maximum=tenure_maximum)
+    except ValidationError as error:
+        raise typer.BadParameter(
+            "Must be at least --tabu-tenure-min.", param_hint="--tabu-tenure-max"
+        ) from error
+
     return TabuSearch(
         iteration_stop=iteration_stop, tenure=tenure, stop_criteria=(stagnation_stop,)
     )

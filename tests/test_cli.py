@@ -45,7 +45,8 @@ def test_cli_reports_an_invalid_tabu_tenure_range(tmp_path: Path) -> None:
     result = _run_cli(tmp_path, "--tabu-tenure-min", "5", "--tabu-tenure-max", "4")
 
     assert result.returncode == 2
-    assert "Minimum tabu tenure must not exceed the maximum" in result.stderr
+    assert "Invalid value for --tabu-tenure-max" in result.stderr
+    assert "Must be at least --tabu-tenure-min" in result.stderr
 
 
 def test_cli_reports_failure_to_construct_an_initial_solution(tmp_path: Path) -> None:
