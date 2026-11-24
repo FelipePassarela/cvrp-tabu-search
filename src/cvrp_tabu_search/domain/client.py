@@ -8,3 +8,10 @@ class Client:
     demand: PositiveInt
     coord_x: FiniteFloat
     coord_y: FiniteFloat
+
+
+@validated_dataclass(frozen=True)
+class Depot:
+    id: PositiveInt
+    coord_x: FiniteFloat
+    coord_y: FiniteFloat

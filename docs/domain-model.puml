@@ -1,7 +1,10 @@
 @startuml
 
 object "TabuSearch" as tabu
-object "Instance" as inst
+object "Instance" as inst {
+    capacity: int
+    vehicle_count: int
+}
 
 object "Move" as move
 object "InversionMove" as invmo
@@ -22,6 +25,11 @@ object "Client" as client {
     int demand
     Vector2 coord
 }
+object "Depot" as depot {
+    id: int
+    coord_x: float
+    coord_y: float
+}
 object "Route" as rote
 object "Vehicle" as vehi {
     int capacity
@@ -31,7 +39,8 @@ object "Solution" as sol
 object "SolutionEvaluator" as eval
 object "FirstSolutionGenerator" as solgen
 
-inst *-- "1..*" client
+inst *-- "0..*" client
+inst *-- "1" depot
 tabu --> inst : otimiza
 
 smove --|> move

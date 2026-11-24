@@ -1,6 +1,6 @@
 import pytest
 
-from cvrp_tabu_search.domain import Client, Route
+from cvrp_tabu_search.domain import Client, Depot, Route
 from cvrp_tabu_search.search.instance import Instance
 
 
@@ -38,7 +38,8 @@ def test_each_empty_route_has_its_own_client_list() -> None:
 
 
 def test_route_references_the_client_registered_in_the_instance() -> None:
-    instance = Instance()
+    depot = Depot(id=1, coord_x=0, coord_y=0)
+    instance = Instance(depot=depot, capacity=10, vehicle_count=1)
     client = Client(id=7, demand=5, coord_x=2, coord_y=3)
     instance.add_client(client)
 

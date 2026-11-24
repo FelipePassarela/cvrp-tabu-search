@@ -1,7 +1,8 @@
+import re
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-from ..domain import Client
+from ..domain import Client, Depot
 from .instance import Instance
 
 type _VrpHeader = dict[str, str]
@@ -26,7 +27,7 @@ def load_instance(path: str | Path) -> Instance:
     demands = _read_demands(sections)
     depot_id = _read_depot_id(sections)
     _validate_nodes(header, coordinates, demands, depot_id)
-    return _build_instance(coordinates, demands, depot_id)
+    return _build_instance(header, coordinates, demands, depot_id)
 
 
 def _split_sections(lines: Iterable[str]) -> tuple[_VrpHeader, _VrpSections]:
@@ -114,9 +115,18 @@ def _validate_nodes(
 
 
 def _build_instance(
-    coordinates: _CoordinatesByNode, demands: _DemandsByNode, depot_id: int
+    header: _VrpHeader,
+    coordinates: _CoordinatesByNode,
+    demands: _DemandsByNode,
+    depot_id: int,
 ) -> Instance:
-    instance = Instance()
+    depot_x, depot_y = coordinates[depot_id]
+    depot = Depot(id=depot_id, coord_x=depot_x, coord_y=depot_y)
+    instance = Instance(
+        depot=depot,
+        capacity=_read_capacity(header),
+        vehicle_count=_read_vehicle_count(header),
+    )
     for node_id, (x, y) in coordinates.items():
         if node_id == depot_id:
             continue
@@ -125,3 +135,17 @@ def _build_instance(
         instance.add_client(client)
 
     return instance
+
+
+def _read_capacity(header: _VrpHeader) -> int:
+    declared_capacity = header.get("CAPACITY")
+    if declared_capacity is None:
+        raise ValueError("Missing CAPACITY field.")
+    return int(declared_capacity)
+
+
+def _read_vehicle_count(header: _VrpHeader) -> int:
+    fleet_suffix = re.search(r"-k(\d+)$", header.get("NAME", ""))
+    if fleet_suffix is None:
+        raise ValueError("NAME must end in -kN to specify the vehicle count.")
+    return int(fleet_suffix.group(1))

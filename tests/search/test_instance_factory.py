@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 
-from cvrp_tabu_search.domain import Client
+from cvrp_tabu_search.domain import Client, Depot
 from cvrp_tabu_search.search.instance_factory import load_instance
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -12,13 +12,14 @@ _VRP_PATHS = sorted(_REPOSITORY_ROOT.glob("benchmarks/**/*.vrp")) + sorted(
 )
 
 _REORDERED_VRP = dedent("""\
-    NAME : reordered
+    NAME : reordered-k2
     TYPE : CVRP
     DIMENSION : 3
     EDGE_WEIGHT_TYPE : EUC_2D
+    CAPACITY : 6
     NODE_COORD_SECTION
     12 -1.5 7.25
-    3 0 0
+    3 -1.5 9
     8 2 9
     DEMAND_SECTION
     8 6
@@ -44,7 +45,7 @@ def test_load_instance_reads_every_client_from_a_project_file(path: Path) -> Non
     assert len(instance.clients) == node_count - 1
 
 
-def test_load_instance_matches_rows_by_node_id_and_excludes_the_depot(
+def test_load_instance_keeps_the_depot_separate_from_clients(
     tmp_path: Path,
 ) -> None:
     path = tmp_path / "reordered.vrp"
@@ -56,6 +57,7 @@ def test_load_instance_matches_rows_by_node_id_and_excludes_the_depot(
 
     instance = load_instance(str(path))
 
+    assert instance.depot == Depot(id=3, coord_x=-1.5, coord_y=9)
     assert instance.clients == expected_clients
 
 
@@ -67,6 +69,10 @@ def test_load_instance_matches_rows_by_node_id_and_excludes_the_depot(
         ),
         pytest.param(
             "DIMENSION : 3", "DIMENSION : 4", "declared dimension", id="wrong-dimension"
+        ),
+        pytest.param("CAPACITY : 6\n", "", "Missing CAPACITY", id="missing-capacity"),
+        pytest.param(
+            "reordered-k2", "reordered", "vehicle count", id="missing-vehicle-count"
         ),
         pytest.param(
             "NODE_COORD_SECTION",
@@ -82,6 +88,7 @@ def test_load_instance_matches_rows_by_node_id_and_excludes_the_depot(
         ),
         pytest.param("8 6", "12 6", "duplicate node ID", id="duplicate-demand-id"),
         pytest.param("8 6", "9 6", "same node IDs", id="mismatched-node-ids"),
+        pytest.param("3 -1.5 9", "3 nan 9", "finite number", id="nonfinite-depot"),
         pytest.param(
             "3 0\nDEPOT_SECTION",
             "3 2\nDEPOT_SECTION",
