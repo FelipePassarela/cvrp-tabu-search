@@ -1,6 +1,13 @@
 @startuml
 
-object "TabuSearch" as tabu
+object "TabuSearch" as tabu {
+    tenure: TabuTenure
+    solve(instance, seed=None): SearchResult | None
+}
+object "SearchResult" as result {
+    best_cost: int
+    completed_iterations: int
+}
 object "Instance" as inst {
     capacity: int
     vehicle_count: int
@@ -9,13 +16,17 @@ object "Instance" as inst {
 object "Move" as move
 object "InversionMove" as invmo
 object "ReallocationMove" as remo
-object "SwapMove" as smove
+object "ExchangeMove" as smove
 object "Neighbourhood" as neigh
 
 object "TabuMemory" as tlist {
     register(keys, iteration, tenure)
     is_tabu(keys, iteration)
     discard_expired(iteration)
+}
+object "TabuTenure" as tenure {
+    minimum: int
+    maximum: int
 }
 object "TabuKey" as tkey
 
@@ -53,21 +64,23 @@ object "SolutionEvaluator" as eval
 inst *-- "0..*" client
 inst *-- "1" depot
 tabu --> inst : otimiza
+tabu ..> result : retorna
+result --> sol : melhor solução
 
 smove --|> move
 remo --|> move
 invmo --|> move
 move ..> sol : altera
 neigh o-- move : cria e retorna\nadmissiveis
-tabu --> "1..*" move : movimentos\npossíveis
+tabu ..> move : avalia
 tabu ..> neigh : consulta
 
 istop --|> stop
 stagstop --|> stop
 stop ..> progress : consulta
 tabu ..> progress : atualiza
-tabu --> "0..*" stop : para quando\nsatisfaz
-tabu --> "1" istop : k iterações
+tabu --> "0..*" stop : critérios adicionais
+tabu --> "1" istop : limita iterações
 
 rote o-- "0..*" client
 vehi --> rote
@@ -77,9 +90,12 @@ solgen ..> sol : gera
 solgen ..> inst : consulta
 eval ..> sol : avalia
 eval ..> depot : usa
+tabu ..> solgen : gera solução inicial
+tabu ..> eval : calcula custos
 
 move ..> tkey : produz
 tlist o-- "0..*" tkey : bloqueia temporariamente
 tabu --> tlist : popula
+tabu --> tenure : obtém duração tabu
 
 @enduml

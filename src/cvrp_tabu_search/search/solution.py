@@ -9,6 +9,14 @@ from ..domain import Route, Vehicle
 class Solution:
     vehicles: list[Vehicle] = field(default_factory=list)
 
+    def copy(self) -> "Solution":
+        """Copy the vehicles and their visit orders, sharing immutable clients."""
+        vehicles = []
+        for vehicle in self.vehicles:
+            copied_route = Route(clients=vehicle.route.clients)
+            vehicles.append(Vehicle(capacity=vehicle.capacity, route=copied_route))
+        return Solution(vehicles=vehicles)
+
     def vehicle_at(self, index: int) -> Vehicle:
         if not 0 <= index < len(self.vehicles):
             raise IndexError(f"Route index {index} is out of range.")

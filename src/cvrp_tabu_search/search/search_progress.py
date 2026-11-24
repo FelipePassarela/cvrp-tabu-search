@@ -18,8 +18,8 @@ class SearchProgress:
     def iterations_without_improvement(self) -> int:
         return self._iterations_without_improvement
 
-    def record_iteration(self, solution_cost: int) -> None:
-        """Record the cost of the solution reached in a completed iteration."""
+    def record_iteration(self, solution_cost: int) -> bool:
+        """Record a completed iteration and report whether it improved the best cost."""
         is_new_best = solution_cost < self._best_cost
         self._completed_iterations += 1
         if is_new_best:
@@ -27,3 +27,4 @@ class SearchProgress:
             self._iterations_without_improvement = 0
         else:
             self._iterations_without_improvement += 1
+        return is_new_best
