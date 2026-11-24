@@ -4,7 +4,11 @@ from textwrap import dedent
 import pytest
 
 from cvrp_tabu_search.domain import Client, Depot
+from cvrp_tabu_search.search.first_fit_solution_generator import (
+    FirstFitSolutionGenerator,
+)
 from cvrp_tabu_search.search.instance_factory import load_instance
+from cvrp_tabu_search.search.solution_evaluator import SolutionEvaluator
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 _VRP_PATHS = sorted(_REPOSITORY_ROOT.glob("benchmarks/**/*.vrp")) + sorted(
@@ -59,6 +63,21 @@ def test_load_instance_keeps_the_depot_separate_from_clients(
 
     assert instance.depot == Depot(id=3, coord_x=-1.5, coord_y=9)
     assert instance.clients == expected_clients
+
+
+def test_loaded_instance_supports_solution_generation_and_evaluation(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "reordered.vrp"
+    path.write_text(_REORDERED_VRP, encoding="utf-8")
+
+    instance = load_instance(path)
+    solution = FirstFitSolutionGenerator.generate(instance)
+
+    assert solution is not None
+    assert [vehicle.capacity for vehicle in solution.vehicles] == [6, 6]
+    assert [[client.id for client in route] for route in solution.routes] == [[8], [12]]
+    assert SolutionEvaluator.evaluate(solution, instance.depot) == 12
 
 
 @pytest.mark.parametrize(

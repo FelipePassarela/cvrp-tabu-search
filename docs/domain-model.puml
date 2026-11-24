@@ -36,8 +36,8 @@ object "Vehicle" as vehi {
 }
 
 object "Solution" as sol
+object "FirstFitSolutionGenerator" as solgen
 object "SolutionEvaluator" as eval
-object "FirstSolutionGenerator" as solgen
 
 inst *-- "0..*" client
 inst *-- "1" depot
@@ -56,12 +56,14 @@ stagstop --|> stop
 tabu --> "0..*" stop : para quando\nsatisfaz
 tabu --> "1" istop : k iterações
 
-rote o-- "1..*" client
+rote o-- "0..*" client
 vehi --> rote
 
-sol o-- rote
-eval ..> sol : avalia
+sol o-- "0..*" vehi
 solgen ..> sol : gera
+solgen ..> inst : consulta
+eval ..> sol : avalia
+eval ..> depot : usa
 
 tentry --> move
 tlist *-- tentry
