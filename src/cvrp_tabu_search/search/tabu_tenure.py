@@ -21,3 +21,6 @@ class TabuTenure:
             return self.minimum
 
         return generator.randint(self.minimum, self.maximum)
+
+
+DEFAULT_TABU_TENURE = TabuTenure(minimum=1, maximum=15)

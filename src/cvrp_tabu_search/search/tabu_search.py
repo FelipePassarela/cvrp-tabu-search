@@ -14,7 +14,7 @@ from .solution import Solution
 from .solution_evaluator import SolutionEvaluator
 from .stop_criteria import IterationStop, StopCriterion
 from .tabu_memory import TabuMemory
-from .tabu_tenure import TabuTenure
+from .tabu_tenure import DEFAULT_TABU_TENURE, TabuTenure
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ class TabuSearch:
     """Minimize CVRP cost with a fixed tenure or an inclusive sampling range."""
 
     iteration_stop: IterationStop
-    tenure: TabuTenure = TabuTenure(minimum=1, maximum=15)
+    tenure: TabuTenure = DEFAULT_TABU_TENURE
     stop_criteria: tuple[StopCriterion, ...] = ()
 
     def solve(
