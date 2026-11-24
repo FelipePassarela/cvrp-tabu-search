@@ -18,8 +18,17 @@ object "TabuEntry" as tentry {
 }
 
 object "StopCriterion" as stop
-object "IterationStop" as istop
-object "StagnationStop" as stagstop
+object "IterationStop" as istop {
+    max_iterations: int
+}
+object "StagnationStop" as stagstop {
+    stagnation_limit: int
+}
+object "SearchProgress" as progress {
+    best_cost: int
+    completed_iterations: int
+    iterations_without_improvement: int
+}
 
 object "Client" as client {
     int demand
@@ -53,6 +62,8 @@ tabu ..> neigh : consulta
 
 istop --|> stop
 stagstop --|> stop
+stop ..> progress : consulta
+tabu ..> progress : atualiza
 tabu --> "0..*" stop : para quando\nsatisfaz
 tabu --> "1" istop : k iterações
 
