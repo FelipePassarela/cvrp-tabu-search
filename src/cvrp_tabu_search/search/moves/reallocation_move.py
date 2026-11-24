@@ -3,6 +3,7 @@ from pydantic.dataclasses import dataclass as validated_dataclass
 
 from ..solution import Solution
 from .move import Move, _check_distinct_route_indices
+from .tabu_keys import MoveTabuKeys, ReturnTabuKey
 
 
 @validated_dataclass(frozen=True)
@@ -16,6 +17,14 @@ class ReallocationMove(Move):
 
     def __post_init__(self) -> None:
         _check_distinct_route_indices(self.source_route_index, self.target_route_index)
+
+    def tabu_keys(self, solution: Solution) -> MoveTabuKeys:
+        source = solution.vehicle_at(self.source_route_index)
+        client = source.route.client_at(self.source_client_index)
+        return MoveTabuKeys(
+            to_check=(ReturnTabuKey(client.id, self.target_route_index),),
+            to_register=(ReturnTabuKey(client.id, self.source_route_index),),
+        )
 
     def apply(self, solution: Solution) -> None:
         source, target = solution.vehicles_with_distinct_routes(

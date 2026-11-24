@@ -12,10 +12,12 @@ object "ReallocationMove" as remo
 object "SwapMove" as smove
 object "Neighbourhood" as neigh
 
-object "TabuMemory" as tlist
-object "TabuEntry" as tentry {
-    int expire_when
+object "TabuMemory" as tlist {
+    register(keys, iteration, tenure)
+    is_tabu(keys, iteration)
+    discard_expired(iteration)
 }
+object "TabuKey" as tkey
 
 object "StopCriterion" as stop
 object "IterationStop" as istop {
@@ -76,8 +78,8 @@ solgen ..> inst : consulta
 eval ..> sol : avalia
 eval ..> depot : usa
 
-tentry --> move
-tlist *-- tentry
+move ..> tkey : produz
+tlist o-- "0..*" tkey : bloqueia temporariamente
 tabu --> tlist : popula
 
 @enduml
