@@ -1,0 +1,61 @@
+@startuml
+
+object "TabuSearch" as tabu
+object "Instance" as inst
+
+object "Move" as move
+object "InversionMove" as invmo
+object "ReallocationMove" as remo
+object "SwapMove" as smove
+object "Neighbourhood" as neigh
+
+object "TabuMemory" as tlist
+object "TabuEntry" as tentry {
+    int expire_when
+}
+
+object "StopCriterion" as stop
+object "IterationStop" as istop
+object "StagnationStop" as stagstop
+
+object "Client" as client {
+    int demand
+    Vector2 coord
+}
+object "Route" as rote
+object "Vehicle" as vehi {
+    int capacity
+}
+
+object "Solution" as sol
+object "SolutionEvaluator" as eval
+object "FirstSolutionGenerator" as solgen
+
+inst *-- "1..*" client
+tabu --> inst : otimiza
+
+smove --|> move
+remo --|> move
+invmo --|> move
+move ..> sol : altera
+neigh o-- move : cria e retorna\nadmissiveis
+tabu --> "1..*" move : movimentos\npossíveis
+tabu ..> neigh : consulta
+
+istop --|> stop
+stagstop --|> stop
+tabu --> "0..*" stop : para quando\nsatisfaz
+tabu --> "1" istop : k iterações
+
+rote o-- "1..*" client
+vehi --> rote
+
+sol o-- rote
+eval ..> sol : avalia
+solgen ..> sol : gera
+
+tentry --> move
+tlist *-- tentry
+tabu --> tlist : popula
+
+@enduml
