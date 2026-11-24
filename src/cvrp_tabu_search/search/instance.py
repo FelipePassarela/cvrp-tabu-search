@@ -1,16 +1,10 @@
 import copy
 from dataclasses import field
 
-from pydantic import FiniteFloat, PositiveInt
+from pydantic import PositiveInt
 from pydantic.dataclasses import dataclass as validated_dataclass
 
-
-@validated_dataclass(frozen=True)
-class Client:
-    id: PositiveInt
-    demand: PositiveInt
-    coord_x: FiniteFloat
-    coord_y: FiniteFloat
+from ..domain import Client
 
 
 @validated_dataclass(frozen=True)

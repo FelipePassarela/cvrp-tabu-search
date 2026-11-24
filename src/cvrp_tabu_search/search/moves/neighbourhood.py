@@ -2,7 +2,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from itertools import combinations, permutations
 
-from ..route import Route
+from ...domain import Route
 from ..solution import Solution
 from .exchange_move import ExchangeMove
 from .inversion_move import InversionMove

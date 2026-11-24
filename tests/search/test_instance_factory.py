@@ -3,10 +3,10 @@ from textwrap import dedent
 
 import pytest
 
-from cvrp_tabu_search.instance import Client
-from cvrp_tabu_search.instance_factory import load_instance
+from cvrp_tabu_search.domain import Client
+from cvrp_tabu_search.search.instance_factory import load_instance
 
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 _VRP_PATHS = sorted(_REPOSITORY_ROOT.glob("benchmarks/**/*.vrp")) + sorted(
     _REPOSITORY_ROOT.glob("src/**/data/*.vrp")
 )

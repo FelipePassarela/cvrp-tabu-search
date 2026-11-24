@@ -66,11 +66,12 @@ uv run cvrp calibrate --tabu-tenure-min 2 4 6 --tabu-tenure-max 8 12 16 --time-l
 
 O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).
 
-- [`search/`](src/cvrp_tabu_search/search/) contém os algoritmos e as operações de busca compartilhadas.
+- [`domain/`](src/cvrp_tabu_search/domain/) contém os modelos de cliente, rota e veículo.
+- [`search/`](src/cvrp_tabu_search/search/) reúne o carregamento de instâncias, a representação de soluções e os movimentos de vizinhança.
 - [`experiments/`](src/cvrp_tabu_search/experiments/) executa os experimentos. O pacote [`experiments/reports/`](src/cvrp_tabu_search/experiments/reports/) coordena a geração dos relatórios e reúne os módulos de CSV, gráficos e diretórios de saída.
 - `cli.py` recebe os argumentos. `instances.py` carrega os dados e `routes.py` reúne as operações de rota.
 
-Os testes acompanham essa organização em `tests/search/`, `tests/experiments/` e `tests/cli/`. Em `tests/cli/`, os testes dos comandos e dos pontos de entrada ficam em arquivos próprios.
+Os testes acompanham a estrutura do pacote em `tests/domain/` e `tests/search/`, com os testes dos movimentos em `tests/search/moves/` e os da CLI em `tests/test_cli.py`.
 
 Execute os testes com pytest. Use Ruff para lint e formatação e ty para checagem de tipos.
 

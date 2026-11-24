@@ -2,8 +2,7 @@ from dataclasses import field
 
 from pydantic.dataclasses import dataclass as validated_dataclass
 
-from .route import Route
-from .vehicle import Vehicle
+from ..domain import Route, Vehicle
 
 
 @validated_dataclass

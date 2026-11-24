@@ -1,8 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cvrp_tabu_search.instance import Client
-from cvrp_tabu_search.vehicle import Vehicle
+from cvrp_tabu_search.domain import Client, Vehicle
 
 
 def test_each_vehicle_starts_with_its_own_empty_route() -> None:

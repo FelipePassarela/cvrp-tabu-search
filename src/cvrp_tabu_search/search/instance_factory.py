@@ -1,7 +1,8 @@
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-from .instance import Client, Instance
+from ..domain import Client
+from .instance import Instance
 
 type _VrpHeader = dict[str, str]
 type _VrpSections = dict[str, list[str]]

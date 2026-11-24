@@ -1,7 +1,5 @@
-from cvrp_tabu_search.instance import Client
-from cvrp_tabu_search.route import Route
-from cvrp_tabu_search.solution import Solution
-from cvrp_tabu_search.vehicle import Vehicle
+from cvrp_tabu_search.domain import Client, Route, Vehicle
+from cvrp_tabu_search.search.solution import Solution
 
 
 def make_client(client_id: int, demand: int = 1) -> Client:

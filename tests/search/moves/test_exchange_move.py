@@ -1,7 +1,7 @@
 import pytest
 
-from cvrp_tabu_search.moves import ExchangeMove
-from cvrp_tabu_search.solution import Solution
+from cvrp_tabu_search.search.moves import ExchangeMove
+from cvrp_tabu_search.search.solution import Solution
 
 from ._helpers import make_client, make_vehicle, visit_orders
 

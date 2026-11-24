@@ -1,7 +1,7 @@
 import pytest
 
-from cvrp_tabu_search.instance import Client, Instance
-from cvrp_tabu_search.route import Route
+from cvrp_tabu_search.domain import Client, Route
+from cvrp_tabu_search.search.instance import Instance
 
 
 def test_route_preserves_the_order_of_client_visits() -> None:

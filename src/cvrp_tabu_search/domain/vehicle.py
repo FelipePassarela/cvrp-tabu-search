@@ -3,7 +3,7 @@ from dataclasses import field
 from pydantic import PositiveInt
 from pydantic.dataclasses import dataclass as validated_dataclass
 
-from .instance import Client
+from .client import Client
 from .route import Route
 
 

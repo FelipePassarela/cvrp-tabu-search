@@ -1,8 +1,7 @@
 import pytest
 
-from cvrp_tabu_search.route import Route
-from cvrp_tabu_search.solution import Solution
-from cvrp_tabu_search.vehicle import Vehicle
+from cvrp_tabu_search.domain import Route, Vehicle
+from cvrp_tabu_search.search.solution import Solution
 
 
 def test_solution_vehicle_at_returns_the_vehicle_at_that_position() -> None:

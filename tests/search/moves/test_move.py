@@ -1,10 +1,14 @@
 import pytest
 from pydantic import ValidationError
 
-from cvrp_tabu_search.moves import ExchangeMove, InversionMove, Move, ReallocationMove
-from cvrp_tabu_search.route import Route
-from cvrp_tabu_search.solution import Solution
-from cvrp_tabu_search.vehicle import Vehicle
+from cvrp_tabu_search.domain import Route, Vehicle
+from cvrp_tabu_search.search.moves import (
+    ExchangeMove,
+    InversionMove,
+    Move,
+    ReallocationMove,
+)
+from cvrp_tabu_search.search.solution import Solution
 
 from ._helpers import make_client, make_vehicle, visit_orders
 

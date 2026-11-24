@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from cvrp_tabu_search.instance_factory import load_instance
+from cvrp_tabu_search.search.instance_factory import load_instance
 
 _DEFAULT_PATH = Path(__file__).with_name("data") / "A-n32-k5.vrp"
 
