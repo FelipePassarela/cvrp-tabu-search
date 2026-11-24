@@ -82,6 +82,14 @@ uv run ruff format --check
 uv run ty check
 ```
 
+Ative os hooks em cada clone. O Ruff verifica o lint e a formatação dos arquivos preparados para commit. O ty analisa o projeto inteiro quando há alterações em código Python ou na configuração do ambiente. O pytest executa a suíte completa antes de o Git gravar um commit de merge local automático.
+
+```sh
+uv run --locked pre-commit install
+uv run --locked pre-commit run --all-files
+uv run --locked pre-commit run --all-files --hook-stage pre-merge-commit
+```
+
 ## Distribuição
 
 Use `uv build` para gerar o wheel e a distribuição de código-fonte em `dist/`.
