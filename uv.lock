@@ -115,6 +115,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
+    { name = "pydantic" },
     { name = "typer" },
 ]
 
@@ -128,6 +129,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", specifier = ">=3.10" },
+    { name = "pydantic", specifier = ">=2.14.4" },
     { name = "typer", specifier = ">=0.29.2" },
 ]
 
