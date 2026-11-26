@@ -6,46 +6,48 @@ As instâncias adicionais estão em [`benchmarks/general/`](benchmarks/general/)
 
 ## Instalação
 
-Na raiz do repositório, use o [uv](https://docs.astral.sh/uv/getting-started/installation/) para criar o ambiente com Python 3.12 e instalar o pacote.
+Na raiz do repositório, use o [uv](https://docs.astral.sh/uv/getting-started/installation/) para criar o ambiente com Python 3.12 e instalar os pacotes do workspace.
 
 ```sh
-uv sync --locked
+uv sync --locked --all-packages
 ```
 
 ## Execução
 
 ```sh
-uv run cvrp --help
-uv run cvrp
-uv run cvrp benchmarks/general/A-n33-k5.vrp --seed 1
+uv run --locked --package cvrp-search cvrp-search --help
+uv run --locked --package cvrp-search cvrp-search
+uv run --locked --package cvrp-search cvrp-search benchmarks/general/A-n33-k5.vrp --seed 1
 ```
 
-`cvrp` executa a busca tabu com inversões, realocações e trocas. Por padrão, usa a instância `A-n32-k5.vrp`, incluída em [`src/cvrp_tabu_search/data/`](src/cvrp_tabu_search/data/). A saída mostra o melhor custo, o total de iterações e os clientes de cada rota utilizada na ordem de visita. O depósito é implícito nas duas extremidades de cada rota.
+`cvrp-search` executa a busca tabu com inversões, realocações e trocas. Por padrão, usa a instância `A-n32-k5.vrp`, incluída no [pacote da CLI](packages/search/src/cvrp_search/data/). A saída mostra o melhor custo, o total de iterações e os clientes de cada rota utilizada na ordem de visita. O depósito é implícito nas duas extremidades de cada rota.
 
 Use `--max-iterations` e `--stagnation-limit` para ajustar os critérios de parada. Os padrões são 60 iterações e 30 iterações consecutivas sem melhora. Com `--max-iterations 0`, o comando exibe a solução inicial.
 
 Use `--tabu-tenure-min` e `--tabu-tenure-max` para configurar o intervalo inclusivo de duração tabu, que por padrão vai de 1 a 15. Use valores iguais para fixar a duração ou dois zeros para desativar o bloqueio tabu. Use `--seed` para reproduzir os sorteios.
 
-A CLI também pode ser executada com `uv run python -m cvrp_tabu_search`.
+O comando `cvrp` continua disponível como alias. Também é possível executar a CLI com `uv run --locked --package cvrp-search python -m cvrp_search`.
 
 ## Desenvolvimento
 
-O pacote vive em [`src/cvrp_tabu_search/`](src/cvrp_tabu_search/).
+Os pacotes têm metadados próprios e compartilham o `uv.lock` da raiz.
 
-- [`domain/`](src/cvrp_tabu_search/domain/) contém os modelos de cliente, rota e veículo.
-- [`search/`](src/cvrp_tabu_search/search/) reúne o carregamento de instâncias, a representação de soluções, os movimentos de vizinhança e a busca tabu.
-- [`cli.py`](src/cvrp_tabu_search/cli.py) lê os argumentos, executa a busca e exibe o resultado.
+- [`cvrp-core`](packages/core/) contém os modelos de domínio e as classes de busca, incluindo a representação de instâncias e soluções, os movimentos de vizinhança e a busca tabu.
+- [`cvrp-search`](packages/search/) contém a CLI, que carrega a instância, executa a busca de `cvrp-core` e exibe o resultado.
 
-Os testes acompanham a estrutura do pacote em `tests/domain/` e `tests/search/`, com os testes dos movimentos em `tests/search/moves/` e os da CLI em `tests/test_cli.py`.
+Os testes de domínio e busca ficam em [`packages/core/tests/`](packages/core/tests/). Os testes da CLI ficam em [`packages/search/tests/`](packages/search/tests/).
 
 Execute os testes com pytest. Use Ruff para lint e formatação e ty para checagem de tipos.
 
 ```sh
-uv run pytest
-uv run ruff check
-uv run ruff format --check
-uv run ty check
+uv run --locked --all-packages pytest
+uv run --locked ruff check
+uv run --locked ruff format --check
+uv run --locked --all-packages ty check
+uv run --locked --all-packages lint-imports --no-cache
 ```
+
+O Import Linter verifica que a dependência entre os pacotes segue da CLI para o core. O GitHub Actions roda essa checagem nas PRs e nos pushes para `main`.
 
 Ative os hooks em cada clone. O Ruff verifica o lint e a formatação dos arquivos preparados para commit. O ty analisa o projeto inteiro quando há alterações em código Python ou na configuração do ambiente. O pytest executa a suíte completa antes de o Git gravar um commit de merge local automático.
 
@@ -57,4 +59,4 @@ uv run --locked pre-commit run --all-files --hook-stage pre-merge-commit
 
 ## Distribuição
 
-Use `uv build` para gerar o wheel e a distribuição de código-fonte em `dist/`.
+Use `uv build --all-packages` para gerar os wheels e as distribuições de código-fonte em `dist/`.

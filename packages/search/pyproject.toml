@@ -1,0 +1,21 @@
+[project]
+name = "cvrp-search"
+version = "0.1.0"
+description = "Command-line solver for CVRP instances"
+requires-python = ">=3.12"
+dependencies = [
+    "cvrp-core",
+    "pydantic>=2.14.4",
+    "typer>=0.29.2",
+]
+
+[project.scripts]
+cvrp-search = "cvrp_search.cli:app"
+cvrp = "cvrp_search.cli:app"
+
+[tool.uv.sources]
+cvrp-core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9"]
+build-backend = "uv_build"

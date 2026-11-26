@@ -1,0 +1,10 @@
+[project]
+name = "cvrp-core"
+version = "0.1.0"
+description = "CVRP domain models and tabu search algorithms"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.14.4"]
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9"]
+build-backend = "uv_build"
