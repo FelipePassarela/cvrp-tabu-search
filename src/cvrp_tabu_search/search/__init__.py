@@ -1,1 +1,1 @@
-"""Tabu search algorithms and their shared operations."""
+"""CVRP instances, solutions, and search operations."""
