@@ -13,6 +13,7 @@ class Instance:
     capacity: PositiveInt
     vehicle_count: PositiveInt
     _clients: dict[PositiveInt, Client] = field(default_factory=dict)
+    optimal_cost: PositiveInt | None = None
 
     def add_client(self, client: Client) -> None:
         if client.id in self._clients:

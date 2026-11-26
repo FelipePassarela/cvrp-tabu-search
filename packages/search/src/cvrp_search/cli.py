@@ -44,7 +44,7 @@ def run(
         )
         raise typer.Exit(code=1)
 
-    _print_result(result)
+    _print_result(result, instance.optimal_cost)
 
 
 def _read_instance(path: Path) -> Instance:
@@ -71,13 +71,27 @@ def _build_search(
     )
 
 
-def _print_result(result: SearchResult) -> None:
-    print(f"Best cost: {result.best_cost}")
+def _print_result(result: SearchResult, optimal_cost: int | None) -> None:
+    print(_format_cost_summary(result.best_cost, optimal_cost))
     print(f"Completed iterations: {result.completed_iterations}")
     for vehicle_number, route in enumerate(result.best_solution.routes, start=1):
         if route:
             client_ids = " ".join(str(client.id) for client in route)
             print(f"Route #{vehicle_number}: {client_ids}")
+
+
+def _format_cost_summary(best_cost: int, optimal_cost: int | None) -> str:
+    best_cost_summary = f"Best cost: {best_cost}"
+    if optimal_cost is None:
+        return f"{best_cost_summary} | Optimal cost: N/A | Gap: N/A"
+
+    cost_difference = best_cost - optimal_cost
+    absolute_gap = abs(cost_difference)
+    relative_gap = cost_difference / optimal_cost
+    return (
+        f"{best_cost_summary} | Optimal cost: {optimal_cost}"
+        f" | Gap: {absolute_gap} ({relative_gap:.2%})"
+    )
 
 
 if __name__ == "__main__":

@@ -7,7 +7,9 @@ def test_cli_searches_the_bundled_instance_by_default(tmp_path: Path) -> None:
     result = _run_cli(tmp_path, "--max-iterations", "1", "--seed", "1")
 
     assert result.returncode == 0, result.stderr
-    assert "Best cost: 2184" in result.stdout
+    assert result.stdout.splitlines()[0] == (
+        "Best cost: 2184 | Optimal cost: 784 | Gap: 1400 (178.57%)"
+    )
     assert "Completed iterations: 1" in result.stdout
     assert "Route #1: 20 25 26 16 4" in result.stdout
 
@@ -28,7 +30,7 @@ def test_cli_searches_the_requested_instance_until_stagnation(tmp_path: Path) ->
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines() == [
-        "Best cost: 4",
+        "Best cost: 4 | Optimal cost: N/A | Gap: N/A",
         "Completed iterations: 2",
         "Route #1: 2 3",
     ]

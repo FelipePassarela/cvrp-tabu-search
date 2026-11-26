@@ -20,7 +20,7 @@ uv run --locked --package cvrp-search cvrp-search
 uv run --locked --package cvrp-search cvrp-search benchmarks/general/A-n33-k5.vrp --seed 1
 ```
 
-`cvrp-search` executa a busca tabu com inversões, realocações e trocas. Por padrão, usa a instância `A-n32-k5.vrp`, incluída no [pacote da CLI](packages/search/src/cvrp_search/data/). A saída mostra o melhor custo, o total de iterações e os clientes de cada rota utilizada na ordem de visita. O depósito é implícito nas duas extremidades de cada rota.
+`cvrp-search` executa a busca tabu com inversões, realocações e trocas. Por padrão, usa a instância `A-n32-k5.vrp`, incluída no [pacote da CLI](packages/search/src/cvrp_search/data/). A primeira linha da saída reúne o melhor custo, o custo ótimo informado no arquivo `.vrp` e o gap absoluto e percentual. Sem valor de referência, o ótimo e o gap aparecem como `N/A`. Em seguida, a CLI mostra o total de iterações e os clientes de cada rota utilizada na ordem de visita. O depósito é implícito nas duas extremidades de cada rota.
 
 Use `--max-iterations` e `--stagnation-limit` para ajustar os critérios de parada. Os padrões são 60 iterações e 30 iterações consecutivas sem melhora. Com `--max-iterations 0`, o comando exibe a solução inicial.
 

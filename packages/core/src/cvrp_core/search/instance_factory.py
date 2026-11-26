@@ -126,6 +126,7 @@ def _build_instance(
         depot=depot,
         capacity=_read_capacity(header),
         vehicle_count=_read_vehicle_count(header),
+        optimal_cost=_read_optimal_cost(header),
     )
     for node_id, (x, y) in coordinates.items():
         if node_id == depot_id:
@@ -149,3 +150,15 @@ def _read_vehicle_count(header: _VrpHeader) -> int:
     if fleet_suffix is None:
         raise ValueError("NAME must end in -kN to specify the vehicle count.")
     return int(fleet_suffix.group(1))
+
+
+def _read_optimal_cost(header: _VrpHeader) -> int | None:
+    comment = header.get("COMMENT", "")
+    match = re.search(
+        r"\bOptimal value\s*:\s*([0-9]+)(?=\s*(?:\)|,\s|$))", comment, re.IGNORECASE
+    )
+    if match is None:
+        return None
+
+    optimal_cost = int(match.group(1))
+    return optimal_cost if optimal_cost > 0 else None
