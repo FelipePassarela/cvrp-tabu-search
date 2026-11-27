@@ -1,6 +1,6 @@
 from cvrp_core.search.solution import Solution
 from cvrp_core.search.solution_evaluator import SolutionEvaluator
-from cvrp_core.search.tabu_search import SearchResult
+from cvrp_core.search.tabu import SearchResult
 
 
 def print_search_result(result: SearchResult, optimal_cost: int | None) -> None:

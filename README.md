@@ -34,8 +34,9 @@ Os pacotes têm metadados próprios e compartilham o `uv.lock` da raiz.
 
 - [`cvrp-core`](packages/core/) contém os modelos de domínio e as classes de busca, incluindo a representação de instâncias e soluções, os movimentos de vizinhança e a busca tabu.
 - [`cvrp-search`](packages/search/) contém a CLI, que carrega a instância, executa a busca de `cvrp-core` e exibe o resultado.
+- [`cvrp-calibration`](packages/calibration/) define o protocolo `ParamSampler`, cujo método `sample()` produz a `TabuSearchConfig` usada em `TabuSearch(config)`. `OptunaParamSampler` implementa o protocolo e usa `IntDistribution` para configurar as faixas. Use limites iguais para manter um parâmetro fixo.
 
-Os testes de domínio e busca ficam em [`packages/core/tests/`](packages/core/tests/). Os testes da CLI ficam em [`packages/search/tests/`](packages/search/tests/).
+Os testes ficam em [`packages/core/tests/`](packages/core/tests/), [`packages/search/tests/`](packages/search/tests/) e [`packages/calibration/tests/`](packages/calibration/tests/).
 
 Execute os testes com pytest. Use Ruff para lint e formatação e ty para checagem de tipos.
 
@@ -47,7 +48,7 @@ uv run --locked --all-packages ty check
 uv run --locked --all-packages lint-imports --no-cache
 ```
 
-O Import Linter verifica que a dependência entre os pacotes segue da CLI para o core. O GitHub Actions roda essa checagem nas PRs e nos pushes para `main`.
+O Import Linter verifica que os pacotes de busca e calibração são independentes entre si e que ambos podem depender do core. O GitHub Actions roda essa checagem nas PRs e nos pushes para `main`.
 
 Ative os hooks em cada clone. O Ruff verifica o lint e a formatação dos arquivos preparados para commit. O ty analisa o projeto inteiro quando há alterações em código Python ou na configuração do ambiente. O pytest executa a suíte completa antes de o Git gravar um commit de merge local automático.
 

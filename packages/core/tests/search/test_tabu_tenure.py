@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cvrp_core.search.tabu_tenure import TabuTenure
+from cvrp_core.search.tabu import TabuTenure
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,7 @@
 from cvrp_core.search.moves import ExchangeMove, InversionMove, ReallocationMove
 from cvrp_core.search.moves.tabu_keys import TabuKey
 from cvrp_core.search.solution import Solution
-from cvrp_core.search.tabu_memory import TabuMemory
+from cvrp_core.search.tabu import TabuMemory
 
 from ._helpers import make_client, make_vehicle
 

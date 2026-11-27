@@ -3,15 +3,15 @@ import pytest
 from cvrp_core.domain import Client, Depot
 from cvrp_core.search.instance import Instance
 from cvrp_core.search.stop_criteria import IterationStop, StagnationStop
-from cvrp_core.search.tabu_search import TabuSearch
-from cvrp_core.search.tabu_tenure import TabuTenure
+from cvrp_core.search.tabu import TabuSearch, TabuSearchConfig, TabuTenure
 
 
 def test_selects_the_best_feasible_neighbor_across_routes() -> None:
     instance = _make_instance(
         (1, 0), (2, 0), (9, 0), (10, 0), capacity=3, vehicle_count=2
     )
-    search = TabuSearch(iteration_stop=IterationStop(1))
+    config = TabuSearchConfig(iteration_stop=IterationStop(1))
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -26,7 +26,8 @@ def test_selects_the_best_feasible_neighbor_across_routes() -> None:
 def test_accepts_a_tabu_inversion_when_it_improves_the_global_best() -> None:
     instance = _make_instance((1, 1), (-3, 2), (-1, -3), (2, 2), (3, -2), capacity=5)
     tenure = TabuTenure(minimum=5, maximum=5)
-    search = TabuSearch(iteration_stop=IterationStop(3), tenure=tenure)
+    config = TabuSearchConfig(iteration_stop=IterationStop(3), tenure=tenure)
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -47,7 +48,8 @@ def test_tabu_tenure_controls_whether_the_only_inversion_can_be_repeated(
 ) -> None:
     instance = _make_instance((1, 0), (2, 0), capacity=2)
     tenure = TabuTenure(minimum=duration, maximum=duration)
-    search = TabuSearch(iteration_stop=IterationStop(4), tenure=tenure)
+    config = TabuSearchConfig(iteration_stop=IterationStop(4), tenure=tenure)
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -60,7 +62,8 @@ def test_tabu_tenure_controls_whether_the_only_inversion_can_be_repeated(
 def test_tabu_tenure_is_drawn_for_each_move_and_reproduced_by_seed() -> None:
     instance = _make_instance((1, 0), (2, 0), capacity=2)
     tenure = TabuTenure(minimum=0, maximum=1)
-    search = TabuSearch(iteration_stop=IterationStop(4), tenure=tenure)
+    config = TabuSearchConfig(iteration_stop=IterationStop(4), tenure=tenure)
+    search = TabuSearch(config)
     seed = 1
 
     result = search.solve(instance, seed=seed)
@@ -74,11 +77,12 @@ def test_tabu_tenure_is_drawn_for_each_move_and_reproduced_by_seed() -> None:
 
 def test_stagnation_can_end_search_before_the_iteration_limit() -> None:
     instance = _make_instance((1, 0), (2, 0), capacity=2)
-    search = TabuSearch(
+    config = TabuSearchConfig(
         iteration_stop=IterationStop(10),
         tenure=TabuTenure(minimum=0, maximum=0),
         stop_criteria=(StagnationStop(2),),
     )
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -91,7 +95,8 @@ def test_zero_iterations_returns_the_initial_solution() -> None:
     instance = _make_instance(
         (1, 0), (2, 0), (9, 0), (10, 0), capacity=3, vehicle_count=2
     )
-    search = TabuSearch(iteration_stop=IterationStop(0))
+    config = TabuSearchConfig(iteration_stop=IterationStop(0))
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -102,7 +107,8 @@ def test_zero_iterations_returns_the_initial_solution() -> None:
 
 def test_search_stops_when_there_are_no_moves() -> None:
     instance = _make_instance((2, 0), capacity=1)
-    search = TabuSearch(iteration_stop=IterationStop(10))
+    config = TabuSearchConfig(iteration_stop=IterationStop(10))
+    search = TabuSearch(config)
 
     result = search.solve(instance)
 
@@ -113,7 +119,8 @@ def test_search_stops_when_there_are_no_moves() -> None:
 
 def test_search_returns_none_if_first_fit_cannot_place_all_clients() -> None:
     instance = _make_instance((1, 0), (2, 0), capacity=1)
-    search = TabuSearch(iteration_stop=IterationStop(10))
+    config = TabuSearchConfig(iteration_stop=IterationStop(10))
+    search = TabuSearch(config)
 
     assert search.solve(instance) is None
 

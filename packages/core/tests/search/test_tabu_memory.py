@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cvrp_core.search.tabu_memory import TabuMemory
+from cvrp_core.search.tabu import TabuMemory
 
 
 def test_tenure_covers_the_next_iterations_inclusively() -> None:

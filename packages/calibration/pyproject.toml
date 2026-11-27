@@ -1,0 +1,17 @@
+[project]
+name = "cvrp-calibration"
+version = "0.1.0"
+description = "Optuna parameter calibration for CVRP tabu search"
+requires-python = ">=3.12"
+dependencies = [
+    "cvrp-core",
+    "optuna>=5.1.0",
+    "pydantic>=2.14.4",
+]
+
+[tool.uv.sources]
+cvrp-core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9"]
+build-backend = "uv_build"

@@ -18,7 +18,7 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["packages/core", "packages/search"]
+members = ["packages/calibration", "packages/core", "packages/search"]
 
 [tool.ruff]
 src = ["packages/*/src"]
@@ -30,13 +30,18 @@ extend-select = ["I", "UP"]
 python = ".venv"
 
 [tool.importlinter]
-root_packages = ["cvrp_core", "cvrp_search"]
+root_packages = ["cvrp_calibration", "cvrp_core", "cvrp_search"]
 
 [[tool.importlinter.contracts]]
-name = "CVRP core is independent of the search application"
+name = "CVRP core is independent of the applications"
 type = "forbidden"
 source_modules = ["cvrp_core"]
-forbidden_modules = ["cvrp_search"]
+forbidden_modules = ["cvrp_calibration", "cvrp_search"]
+
+[[tool.importlinter.contracts]]
+name = "CVRP calibration and search applications are independent"
+type = "independence"
+modules = ["cvrp_calibration", "cvrp_search"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/core/tests", "packages/search/tests"]
+testpaths = ["packages/calibration/tests", "packages/core/tests", "packages/search/tests"]

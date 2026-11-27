@@ -6,8 +6,12 @@ from pydantic import ValidationError
 from cvrp_core.search.instance import Instance
 from cvrp_core.search.instance_factory import load_instance
 from cvrp_core.search.stop_criteria import IterationStop, StagnationStop
-from cvrp_core.search.tabu_search import TabuSearch
-from cvrp_core.search.tabu_tenure import DEFAULT_TABU_TENURE, TabuTenure
+from cvrp_core.search.tabu import (
+    DEFAULT_TABU_TENURE,
+    TabuSearch,
+    TabuSearchConfig,
+    TabuTenure,
+)
 
 from .args import (
     DEFAULT_INSTANCE_PATH,
@@ -33,9 +37,10 @@ def run(
     seed: RandomSeed = None,
 ) -> None:
     """Run tabu search on a CVRP instance."""
-    search = _build_search(
+    config = _build_search_config(
         max_iterations, stagnation_limit, tabu_tenure_min, tabu_tenure_max
     )
+    search = TabuSearch(config)
     instance = _read_instance(path)
     result = search.solve(instance, seed=seed)
 
@@ -55,9 +60,9 @@ def _read_instance(path: Path) -> Instance:
         raise typer.BadParameter(str(error), param_hint="PATH") from error
 
 
-def _build_search(
+def _build_search_config(
     max_iterations: int, stagnation_limit: int, tenure_minimum: int, tenure_maximum: int
-) -> TabuSearch:
+) -> TabuSearchConfig:
     iteration_stop = IterationStop(max_iterations=max_iterations)
     stagnation_stop = StagnationStop(stagnation_limit=stagnation_limit)
     try:
@@ -67,7 +72,7 @@ def _build_search(
             "Must be at least --tabu-tenure-min.", param_hint="--tabu-tenure-max"
         ) from error
 
-    return TabuSearch(
+    return TabuSearchConfig(
         iteration_stop=iteration_stop, tenure=tenure, stop_criteria=(stagnation_stop,)
     )
 

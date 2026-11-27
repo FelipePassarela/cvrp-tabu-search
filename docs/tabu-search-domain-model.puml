@@ -1,9 +1,9 @@
 @startuml
 
 object "TabuSearch" as tabu {
-    tenure: TabuTenure
     solve(instance, seed=None): SearchResult | None
 }
+object "TabuSearchConfig" as config
 object "SearchResult" as result {
     best_cost: int
     completed_iterations: int
@@ -64,6 +64,7 @@ object "SolutionEvaluator" as eval
 inst *-- "0..*" client
 inst *-- "1" depot
 tabu --> inst : otimiza
+tabu --> config
 tabu ..> result : retorna
 result --> sol : melhor solução
 
@@ -79,8 +80,8 @@ istop --|> stop
 stagstop --|> stop
 stop ..> progress : consulta
 tabu ..> progress : atualiza
-tabu --> "0..*" stop : critérios adicionais
-tabu --> "1" istop : limita iterações
+config --> "0..*" stop : critérios adicionais
+config --> "1" istop : limita iterações
 
 rote o-- "0..*" client
 vehi --> rote
@@ -96,6 +97,6 @@ tabu ..> eval : calcula custos
 move ..> tkey : produz
 tlist o-- "0..*" tkey : bloqueia temporariamente
 tabu --> tlist : popula
-tabu --> tenure : obtém duração tabu
+config --> tenure : intervalo de duração tabu
 
 @enduml

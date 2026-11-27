@@ -1,7 +1,13 @@
 @startuml
 class Calibration
-class ParamsDistributions
-class ParamsConfig
+interface ParamSampler {
+    sample(): TabuSearchConfig
+}
+class TabuSearchConfig {
+    iteration_stop: IterationStop
+    tenure: TabuTenure
+    stop_criteria: tuple[StopCriterion, ...]
+}
 class Instance
 class TabuSearch
 
@@ -9,10 +15,11 @@ class CalibrationResult {
     mean_gap: float
 }
 
-Calibration --> ParamsDistributions : amostra
-ParamsDistributions ..> ParamsConfig : gera
+Calibration --> ParamSampler : amostra
+ParamSampler ..> TabuSearchConfig : retorna
+TabuSearch --> TabuSearchConfig : usa
 Calibration --> Instance : avalia em
 Calibration ..> TabuSearch : executa com cada\nconfiguração
 Calibration ..> CalibrationResult : retorna
-CalibrationResult --> ParamsConfig : configuração vencedora
+CalibrationResult --> TabuSearchConfig : configuração vencedora
 @enduml

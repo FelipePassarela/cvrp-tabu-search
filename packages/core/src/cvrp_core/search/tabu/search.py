@@ -1,20 +1,18 @@
 from dataclasses import dataclass
 from random import Random
 
-from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass as validated_dataclass
 
-from ..domain import Depot
-from .first_fit_solution_generator import FirstFitSolutionGenerator
-from .instance import Instance
-from .moves import Move, Neighbourhood
-from .moves.tabu_keys import TabuKey
-from .search_progress import SearchProgress
-from .solution import Solution
-from .solution_evaluator import SolutionEvaluator
-from .stop_criteria import IterationStop, StopCriterion
-from .tabu_memory import TabuMemory
-from .tabu_tenure import DEFAULT_TABU_TENURE, TabuTenure
+from ...domain import Depot
+from ..first_fit_solution_generator import FirstFitSolutionGenerator
+from ..instance import Instance
+from ..moves import Move, Neighbourhood
+from ..moves.tabu_keys import TabuKey
+from ..search_progress import SearchProgress
+from ..solution import Solution
+from ..solution_evaluator import SolutionEvaluator
+from .config import TabuSearchConfig
+from .memory import TabuMemory
 
 
 @dataclass(frozen=True)
@@ -31,13 +29,11 @@ class _Candidate:
     keys_to_register: tuple[TabuKey, ...]
 
 
-@validated_dataclass(frozen=True, config=ConfigDict(arbitrary_types_allowed=True))
+@validated_dataclass(frozen=True)
 class TabuSearch:
     """Minimize CVRP cost with a fixed tenure or an inclusive sampling range."""
 
-    iteration_stop: IterationStop
-    tenure: TabuTenure = DEFAULT_TABU_TENURE
-    stop_criteria: tuple[StopCriterion, ...] = ()
+    config: TabuSearchConfig
 
     def solve(
         self, instance: Instance, *, seed: int | None = None
@@ -81,8 +77,8 @@ class TabuSearch:
         )
 
     def _should_stop(self, progress: SearchProgress) -> bool:
-        return self.iteration_stop.should_stop(progress) or any(
-            criterion.should_stop(progress) for criterion in self.stop_criteria
+        return self.config.iteration_stop.should_stop(progress) or any(
+            criterion.should_stop(progress) for criterion in self.config.stop_criteria
         )
 
     def _advance(
@@ -103,7 +99,7 @@ class TabuSearch:
             best_cost=progress.best_cost,
         )
         if candidate is not None:
-            tenure = self.tenure.draw(tenure_random)
+            tenure = self.config.tenure.draw(tenure_random)
             tabu_memory.register(
                 candidate.keys_to_register, iteration=iteration, tenure=tenure
             )
