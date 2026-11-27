@@ -6,10 +6,10 @@ from pydantic import ValidationError
 from cvrp_core.search.instance import Instance
 from cvrp_core.search.instance_factory import load_instance
 from cvrp_core.search.stop_criteria import IterationStop, StagnationStop
-from cvrp_core.search.tabu_search import SearchResult, TabuSearch
+from cvrp_core.search.tabu_search import TabuSearch
 from cvrp_core.search.tabu_tenure import DEFAULT_TABU_TENURE, TabuTenure
 
-from .cli_args import (
+from .args import (
     DEFAULT_INSTANCE_PATH,
     InstancePath,
     IterationLimit,
@@ -18,6 +18,7 @@ from .cli_args import (
     TabuTenureMaximum,
     TabuTenureMinimum,
 )
+from .output import print_search_result
 
 app = typer.Typer(add_completion=False)
 
@@ -44,7 +45,7 @@ def run(
         )
         raise typer.Exit(code=1)
 
-    _print_result(result, instance.optimal_cost)
+    print_search_result(result, instance.optimal_cost)
 
 
 def _read_instance(path: Path) -> Instance:
@@ -68,29 +69,6 @@ def _build_search(
 
     return TabuSearch(
         iteration_stop=iteration_stop, tenure=tenure, stop_criteria=(stagnation_stop,)
-    )
-
-
-def _print_result(result: SearchResult, optimal_cost: int | None) -> None:
-    print(_format_cost_summary(result.best_cost, optimal_cost))
-    print(f"Completed iterations: {result.completed_iterations}")
-    for vehicle_number, route in enumerate(result.best_solution.routes, start=1):
-        if route:
-            client_ids = " ".join(str(client.id) for client in route)
-            print(f"Route #{vehicle_number}: {client_ids}")
-
-
-def _format_cost_summary(best_cost: int, optimal_cost: int | None) -> str:
-    best_cost_summary = f"Best cost: {best_cost}"
-    if optimal_cost is None:
-        return f"{best_cost_summary} | Optimal cost: N/A | Gap: N/A"
-
-    cost_difference = best_cost - optimal_cost
-    absolute_gap = abs(cost_difference)
-    relative_gap = cost_difference / optimal_cost
-    return (
-        f"{best_cost_summary} | Optimal cost: {optimal_cost}"
-        f" | Gap: {absolute_gap} ({relative_gap:.2%})"
     )
 
 

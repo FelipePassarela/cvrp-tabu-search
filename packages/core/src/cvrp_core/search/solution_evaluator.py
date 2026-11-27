@@ -16,6 +16,12 @@ class SolutionEvaluator:
         return sum(route_costs)
 
     @staticmethod
+    def calculate_relative_gap(best_cost: int, optimal_cost: int) -> float:
+        """Return the signed relative gap to a positive reference cost."""
+        cost_difference = best_cost - optimal_cost
+        return cost_difference / optimal_cost
+
+    @staticmethod
     def _route_cost(route: Route, depot: Depot) -> int:
         depot_location = (depot.coord_x, depot.coord_y)
         cost = 0
