@@ -1,0 +1,18 @@
+@startuml
+class Calibration
+class ParamsDistributions
+class ParamsConfig
+class Instance
+class TabuSearch
+
+class CalibrationResult {
+    mean_gap: float
+}
+
+Calibration --> ParamsDistributions : amostra
+ParamsDistributions ..> ParamsConfig : gera
+Calibration --> Instance : avalia em
+Calibration ..> TabuSearch : executa com cada\nconfiguração
+Calibration ..> CalibrationResult : retorna
+CalibrationResult --> ParamsConfig : configuração vencedora
+@enduml
